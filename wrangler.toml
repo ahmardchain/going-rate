@@ -1,0 +1,15 @@
+name = "going-rate"
+main = "src/worker.js"
+compatibility_date = "2026-10-01"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+# Create with: npx wrangler kv namespace create GOING_RATE, then paste the id here.
+[[kv_namespaces]]
+binding = "GOING_RATE"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
+
+# Secrets (never commit): npx wrangler secret put SERV_API_KEY
+#                         npx wrangler secret put INGEST_TOKEN   (optional, for verified Kite outcomes)

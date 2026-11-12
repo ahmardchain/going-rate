@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Going Rate</title>
+<meta name="description" content="Before you tap your passkey to approve an agent's Kite spending session, see what people usually approve for that kind of task.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23163a2e'/><path d='M7 22h18M9 18l5-6 4 4 5-7' stroke='%2384e1b8' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+<style>
+  :root {
+    --bg: #f4f2ec; --panel: #fffdf8; --ink: #17201c; --muted: #66706b; --line: #e2ded3;
+    --accent: #1f6b4f; --accent-ink: #ffffff; --soft: #e6f1eb;
+    --high: #b3261e; --high-bg: #fbe7e4; --low: #8a5a00; --low-bg: #fbf0d9; --ok: #1f6b4f; --ok-bg: #e2f2ea;
+    --sheet: #ffffff; --shadow: 0 18px 50px -20px rgba(23, 32, 28, .35);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #101513; --panel: #171d1a; --ink: #e8ece9; --muted: #98a39d; --line: #29312d;
+      --accent: #63c99d; --accent-ink: #0c1411; --soft: #1b2a23;
+      --high: #ff8a80; --high-bg: #3a1d1b; --low: #f2c46b; --low-bg: #33290f; --ok: #63c99d; --ok-bg: #16291f;
+      --sheet: #1c2420; --shadow: 0 18px 50px -20px rgba(0, 0, 0, .7);
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 1040px; margin: 0 auto; padding: 40px 16px 80px; }
+  h1 { font-size: clamp(30px, 5vw, 44px); line-height: 1.05; letter-spacing: -.02em; margin: 0 0 10px; }
+  h2 { font-size: 20px; margin: 0 0 4px; letter-spacing: -.01em; }
+  .lede { max-width: 640px; color: var(--muted); font-size: 18px; margin: 0 0 14px; }
+  .pill { display: inline-block; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 99px; background: var(--soft); color: var(--accent); margin: 0 6px 6px 0; }
+  .grid { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 28px; margin-top: 28px; align-items: start; }
+  @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 18px; }
+  .step { display: grid; gap: 10px; margin-bottom: 14px; }
+  .step .num { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .step p { margin: 0; color: var(--muted); font-size: 15px; }
+  .ask { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .ask label { font-size: 12px; color: var(--muted); display: grid; gap: 3px; }
+  input, textarea { font: inherit; color: inherit; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; width: 100%; min-width: 0; }
+  textarea { resize: vertical; min-height: 44px; }
+  .btns { display: flex; gap: 8px; flex-wrap: wrap; }
+  button { font: inherit; font-weight: 600; border-radius: 10px; padding: 9px 14px; cursor: pointer; border: 1px solid var(--line); background: var(--panel); color: var(--ink); }
+  button.primary { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+  button:disabled { opacity: .5; cursor: progress; }
+  /* The approval sheet */
+  .sheet-wrap { position: sticky; top: 16px; }
+  .sheet { background: var(--sheet); border-radius: 22px; box-shadow: var(--shadow); border: 1px solid var(--line); padding: 20px; min-height: 420px; }
+  .sheet .kicker { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .sheet h3 { margin: 4px 0 2px; font-size: 18px; line-height: 1.3; }
+  .sheet .type { font-size: 13px; color: var(--muted); margin-bottom: 14px; }
+  .cue { display: inline-flex; align-items: center; gap: 6px; font-weight: 800; font-size: 13px; letter-spacing: .06em; padding: 6px 12px; border-radius: 99px; }
+  .cue.high { background: var(--high-bg); color: var(--high); }
+  .cue.low { background: var(--low-bg); color: var(--low); }
+  .cue.in_line { background: var(--ok-bg); color: var(--ok); }
+  .cue.unknown { background: var(--soft); color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 14px 0 10px; font-variant-numeric: tabular-nums; }
+  th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; padding: 0 4px 6px; }
+  td { padding: 8px 4px; border-top: 1px solid var(--line); }
+  td.c-high { color: var(--high); font-weight: 700; }
+  td.c-low { color: var(--low); font-weight: 700; }
+  td.c-in_line { color: var(--ok); font-weight: 600; }
+  .notes { margin: 0; padding-left: 18px; font-size: 14px; color: var(--muted); }
+  .suggest { margin-top: 12px; background: var(--soft); border-radius: 12px; padding: 10px 12px; font-size: 14px; }
+  .passkey { margin-top: 16px; display: grid; gap: 8px; }
+  .passkey button { width: 100%; padding: 12px; }
+  .fine { font-size: 12px; color: var(--muted); margin: 8px 0 0; }
+  .empty { color: var(--muted); display: grid; place-items: center; min-height: 380px; text-align: center; padding: 20px; }
+  .toast { margin-top: 12px; padding: 10px 12px; border-radius: 12px; background: var(--ok-bg); color: var(--ok); font-size: 14px; font-weight: 600; }
+  .toast.rej { background: var(--high-bg); color: var(--high); }
+  .err { color: var(--high); font-size: 14px; }
+  section.more { margin-top: 36px; }
+  .rates { overflow-x: auto; }
+  .rates table { min-width: 560px; }
+  .how { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
+  @media (max-width: 760px) { .how { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 420px) { .how { grid-template-columns: 1fr; } }
+  .how div { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px; font-size: 14px; color: var(--muted); }
+  .how b { display: block; color: var(--ink); margin-bottom: 4px; }
+  .honest { margin-top: 12px; font-size: 14px; color: var(--muted); }
+  .honest li { margin-bottom: 4px; }
+  .spin { display: inline-block; width: 14px; height: 14px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: s .8s linear infinite; vertical-align: -2px; }
+  @keyframes s { to { transform: rotate(360deg); } }
+  code { font-size: .9em; background: var(--soft); padding: 1px 5px; border-radius: 5px; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Going Rate</h1>
+    <p class="lede">Before you tap your passkey to approve an agent's Kite spending session, see what people usually approve for that kind of task. Agents can ask for the right caps the first time, so you approve once and the run doesn't stop halfway for another approval.</p>
+    <span class="pill" id="model">SERV Reasoning</span><span class="pill">Kite Passport sessions</span><span class="pill">Demo mode · passkey simulated</span>
+  </header>
+
+  <div class="grid">
+    <div>
+      <div class="panel step" id="s1">
+        <span class="num">Ask 1 · a wild cap</span>
+        <h2>An agent asks for far more than the task needs</h2>
+        <p>Its caps are a guess. Without a going rate, you either approve too much or reject and wait for it to ask again.</p>
+        <textarea data-f="task_summary">Generate 20 product thumbnails via image API</textarea>
+        <div class="ask">
+          <label>Per payment ($)<input data-f="per_tx_usd" type="number" step="0.01" value="25"></label>
+          <label>Total ($)<input data-f="total_usd" type="number" step="0.01" value="100"></label>
+          <label>Duration (h)<input data-f="ttl_hours" type="number" step="1" value="24"></label>
+        </div>
+        <div class="btns"><button class="primary" data-act="check">Show approval card</button></div>
+      </div>
+
+      <div class="panel step" id="s2">
+        <span class="num">Ask 2 · a similar task</span>
+        <h2>This agent checks the going rate before asking</h2>
+        <p>SERV puts the task in the same category as ask 1, then the agent asks for caps near what people usually approve for it.</p>
+        <textarea data-f="task_summary">Make 15 blog header images</textarea>
+        <div class="ask">
+          <label>Per payment ($)<input data-f="per_tx_usd" type="number" step="0.01" placeholder="from going rate"></label>
+          <label>Total ($)<input data-f="total_usd" type="number" step="0.01" placeholder="from going rate"></label>
+          <label>Duration (h)<input data-f="ttl_hours" type="number" step="1" placeholder="from going rate"></label>
+        </div>
+        <div class="btns"><button class="primary" data-act="suggest">Ask at the going rate</button></div>
+      </div>
+
+      <div class="panel step" id="s3">
+        <span class="num">Ask 3 · too small</span>
+        <h2>An under-ask that would stall mid-run</h2>
+        <p>A cap below what the task usually needs gets a LOW cue. The agent would hit <code>session_total_exceeded</code> and have to ask again.</p>
+        <textarea data-f="task_summary">Fetch hourly weather for 40 cities for a logistics report</textarea>
+        <div class="ask">
+          <label>Per payment ($)<input data-f="per_tx_usd" type="number" step="0.01" value="0.02"></label>
+          <label>Total ($)<input data-f="total_usd" type="number" step="0.01" value="0.3"></label>
+          <label>Duration (h)<input data-f="ttl_hours" type="number" step="1" value="1"></label>
+        </div>
+        <div class="btns"><button data-act="check">Show approval card</button></div>
+      </div>
+    </div>
+
+    <div class="sheet-wrap">
+      <div class="sheet" id="sheet"><div class="empty">Run an ask on the left.<br>The approval card appears here, before the passkey.</div></div>
+    </div>
+  </div>
+
+  <section class="more">
+    <h2>The rate card</h2>
+    <p class="honest" style="margin-top:0">Median caps people approved, by task type. Each count is split into seeded demo rows, your clicks on this page, and approvals confirmed through Kite.</p>
+    <div class="panel rates"><table id="rates"><tr><td>Loading…</td></tr></table></div>
+  </section>
+
+  <section class="more">
+    <h2>How it works</h2>
+    <div class="how">
+      <div><b>1. Agent drafts an ask</b>A task summary plus the caps for <code>kpass session create</code>: per payment, total, duration.</div>
+      <div><b>2. SERV classifies it</b>A fixed system prompt, compiled once by SERV into a cached flowchart, puts the summary into one of 8 task types. SERV never handles amounts.</div>
+      <div><b>3. Code computes the rate</b>Medians and percentiles of past approvals for that type, compared with the ask: in line, high or low, plus suggested caps.</div>
+      <div><b>4. You approve once</b>The card shows before the passkey. After your decision, <code>kpass session status</code> records the outcome and the rate updates.</div>
+    </div>
+    <ul class="honest">
+      <li><b>What's real here:</b> live SERV Reasoning classification (<span id="model2">gpt-6-luna</span>), the rate math, and outcome recording.</li>
+      <li><b>What's simulated on this page:</b> the passkey. The <code>going-rate ask</code> CLI makes the real <code>kpass session create</code> call, waits on <code>kpass session status</code>, and records Kite's actual decision.</li>
+      <li><b>What's seeded:</b> the starting pool (<span id="nseed">93</span> rows, labelled <code>seeded: true</code>). <code>kpass activity</code> is per account, so a shared pool of real approvals doesn't exist yet. Going Rate starts collecting one.</li>
+    </ul>
+  </section>
+</main>
+
+<script>
+const $ = (s, el = document) => el.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const money = (v) => (v == null ? "–" : `$${Number(v).toFixed(2)}`);
+const hrs = (v) => (v == null ? "–" : `${Math.round(v)}h`);
+const CUE = { high: "HIGH", low: "LOW", in_line: "IN LINE", unknown: "NO RATE YET" };
+
+let sid;
+try { sid = localStorage.getItem("going-rate-sid"); if (!sid) { sid = crypto.randomUUID(); localStorage.setItem("going-rate-sid", sid); } }
+catch { sid = crypto.randomUUID(); }
+
+async function api(path, body) {
+  const res = await fetch(path, { method: body ? "POST" : "GET", headers: { "Content-Type": "application/json", "x-demo-session": sid }, body: body ? JSON.stringify(body) : undefined });
+  const out = await res.json();
+  if (!res.ok) throw new Error(out.error || `HTTP ${res.status}`);
+  return out;
+}
+
+const read = (panel) => Object.fromEntries([...panel.querySelectorAll("[data-f]")].map((el) => [el.dataset.f, el.value]));
+const busy = (msg) => {
+  $("#sheet").innerHTML = `<div class="empty"><span><span class="spin"></span> ${esc(msg)}</span></div>`;
+  if (matchMedia("(max-width: 860px)").matches) $("#sheet").scrollIntoView({ behavior: "smooth", block: "start" });
+};
+
+function renderCard(check) {
+  const c = check.card;
+  if (!c) {
+    $("#sheet").innerHTML = `<div class="kicker">Before you approve</div><h3>${esc(check.task_summary)}</h3>
+      <p class="err">${esc(check.classification.error)}</p><p class="fine">No task type means no going rate. Nothing was recorded.</p>`;
+    return;
+  }
+  const row = (name, k, fmt) => {
+    const d = c.dims[k];
+    const x = d.x_median && d.cue !== "in_line" ? ` · ${d.x_median}×` : "";
+    return `<tr><td>${name}</td><td>${fmt(d.requested)}</td><td>${fmt(d.median)}</td><td class="c-${d.cue}">${CUE[d.cue]}${x}</td></tr>`;
+  };
+  const p = c.provenance;
+  $("#sheet").innerHTML = `
+    <div class="kicker">Before you approve · Going Rate</div>
+    <h3>${esc(check.task_summary)}</h3>
+    <div class="type">${esc(c.label)} · classified by SERV (${esc(check.classification.confidence)} confidence)</div>
+    <span class="cue ${c.overall}">${CUE[c.overall]}</span>
+    <table>
+      <tr><th></th><th>Agent asks</th><th>Usually approved</th><th>Cue</th></tr>
+      ${row("Per payment", "per_tx_usd", money)}${row("Total", "total_usd", money)}${row("Duration", "ttl_hours", hrs)}
+    </table>
+    <ul class="notes">${c.notes.map((n) => `<li>${esc(n)}</li>`).join("")}</ul>
+    ${c.suggestion && c.overall !== "in_line" ? `<div class="suggest"><b>Going rate ask:</b> ${money(c.suggestion.per_tx_usd)} per payment, ${money(c.suggestion.total_usd)} total, ${c.suggestion.ttl_hours}h</div>` : ""}
+    <div class="passkey">
+      <button class="primary" data-decide="approved">Approve with passkey</button>
+      <button data-decide="rejected">Reject</button>
+    </div>
+    <p class="fine">Based on ${c.rate.n} approvals: ${p.seeded} seeded, ${p.demo_clicks} from your clicks here, ${p.kite_verified} confirmed through Kite. Passkey simulated in demo mode.</p>
+    <div id="toast"></div>`;
+  $("#sheet").querySelectorAll("[data-decide]").forEach((b) => b.onclick = async () => {
+    $("#sheet").querySelectorAll("[data-decide]").forEach((x) => x.disabled = true);
+    try {
+      const r = await api("/api/outcome", { check_id: check.check_id, outcome: b.dataset.decide });
+      const ok = r.recorded.outcome === "approved";
+      $("#toast").innerHTML = ok
+        ? `<div class="toast">Approved and recorded. The ${esc(c.label.toLowerCase())} going rate now includes it.</div>`
+        : `<div class="toast rej">Rejected and recorded. Rejections don't move the going rate; they count toward how often asks of this size get approved.</div>`;
+      loadRates();
+    } catch (e) { $("#toast").innerHTML = `<p class="err">${esc(e.message)}</p>`; }
+  });
+}
+
+async function runCheck(panel) {
+  const btns = panel.querySelectorAll("button"); btns.forEach((b) => b.disabled = true);
+  busy("SERV is classifying the task…");
+  try { renderCard(await api("/api/check", read(panel))); }
+  catch (e) { $("#sheet").innerHTML = `<p class="err">${esc(e.message)}</p>`; }
+  btns.forEach((b) => b.disabled = false);
+  // On narrow screens the card sits below the asks; bring it into view.
+  if (matchMedia("(max-width: 860px)").matches) $("#sheet").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+document.querySelectorAll("[data-act=check]").forEach((b) => b.onclick = () => runCheck(b.closest(".panel")));
+$("[data-act=suggest]").onclick = async (ev) => {
+  const panel = ev.target.closest(".panel");
+  ev.target.disabled = true; busy("Agent is checking the going rate…");
+  try {
+    const s = await api("/api/suggest", { task_summary: read(panel).task_summary });
+    if (!s.suggestion) throw new Error(s.classification.error || "No going rate for this task type yet.");
+    for (const k of ["per_tx_usd", "total_usd", "ttl_hours"]) panel.querySelector(`[data-f=${k}]`).value = s.suggestion[k];
+    await runCheck(panel);
+  } catch (e) { $("#sheet").innerHTML = `<p class="err">${esc(e.message)}</p>`; }
+  ev.target.disabled = false;
+};
+
+async function loadRates() {
+  const rows = await api("/api/rates");
+  $("#rates").innerHTML = `<tr><th>Task type</th><th>Per payment</th><th>Total</th><th>Duration</th><th>Approvals</th></tr>` +
+    rows.map((r) => `<tr><td>${esc(r.label)}</td><td>${money(r.median.per_tx_usd)}</td><td>${money(r.median.total_usd)}</td><td>${hrs(r.median.ttl_hours)}</td>
+      <td>${r.n} <span class="fine">(${r.provenance.seeded} seeded · ${r.provenance.demo_clicks} yours · ${r.provenance.kite_verified} Kite)</span></td></tr>`).join("");
+}
+
+api("/api/config").then((c) => { $("#model").textContent = `SERV Reasoning · ${c.model}`; $("#model2").textContent = c.model; $("#nseed").textContent = c.seed_records; }).catch(() => {});
+loadRates().catch((e) => { $("#rates").innerHTML = `<tr><td class="err">${esc(e.message)}</td></tr>`; });
+</script>
+</body>
+</html>

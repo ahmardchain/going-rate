@@ -1,0 +1,15 @@
+{
+  "name": "going-rate",
+  "version": "0.1.0",
+  "description": "A rate card for Kite Passport spending sessions: shows what people usually approve for a task type before you tap your passkey.",
+  "type": "module",
+  "license": "MIT",
+  "engines": { "node": ">=22" },
+  "bin": { "going-rate": "src/cli.js" },
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "dev": "node src/dev-server.js",
+    "seed": "node scripts/make-seed.js",
+    "deploy": "wrangler deploy"
+  }
+}
