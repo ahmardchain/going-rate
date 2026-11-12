@@ -12,8 +12,14 @@ async function kpass(args, timeoutMs = 120_000) {
     return JSON.parse(stdout);
   } catch (err) {
     if (err.code === "ENOENT") throw new Error("kpass not found. Install: curl -fsSL https://cli.gokite.ai/install.sh | bash");
-    let parsed; try { parsed = JSON.parse(err.stdout); } catch { /* not JSON */ }
-    throw new Error(`kpass ${args[0]} ${args[1] ?? ""} failed: ${first(parsed?.error?.code, parsed?.code, "")} ${first(parsed?.error?.hint, parsed?.hint, err.stderr, err.message)}`.trim());
+    // On failure kpass prints one or more JSON objects on stdout ({ status: "error", error, hint }).
+    const text = String(err.stdout ?? "");
+    let parsed; try { parsed = JSON.parse(text.slice(0, text.indexOf("\n}") + 2)); } catch { /* not JSON */ }
+    const msg = first(typeof parsed?.error === "string" ? parsed.error : parsed?.error?.message, parsed?.hint, err.stderr, err.message);
+    const e = new Error(`kpass ${args[0]} ${args[1] ?? ""} failed: ${msg}`.trim());
+    e.kpassOutput = text;
+    e.exitCode = err.code;
+    throw e;
   }
 }
 
@@ -46,8 +52,15 @@ export async function createSession({ taskSummary, perTx, total, ttlHours }) {
 }
 
 /** kpass session status --wait — blocks until the passkey decision. Returns "approved" | "rejected" | other. */
-export async function waitForDecision(requestId) {
-  const out = await kpass(["session", "status", "--request-id", requestId, "--wait", "--timeout", "900", "--no-interactive"], 16 * 60_000);
+export async function waitForDecision(requestId, { wait = true } = {}) {
+  let out;
+  try {
+    out = await kpass(["session", "status", "--request-id", requestId, ...(wait ? ["--wait", "--timeout", "900"] : []), "--no-interactive"], 16 * 60_000);
+  } catch (err) {
+    // kpass 6.13.2 reports a rejection as exit 3: "Session request was rejected by the user."
+    if (/rejected by the user/i.test(err.kpassOutput ?? err.message)) return { outcome: "rejected" };
+    throw err;
+  }
   // kpass 6.13.2: top-level `status` is the command envelope ("success"), not the
   // decision. An approved request returns `session.status: "active"` plus a session_id.
   const s = out.session ?? {};

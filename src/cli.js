@@ -100,6 +100,20 @@ async function main() {
     return;
   }
 
+  if (cmd === "record") {
+    // Record the passkey decision for an existing request, e.g. if `ask` was interrupted.
+    const requestId = opt("request-id");
+    if (!requestId) throw new Error("--request-id is required");
+    const body = await askBody();
+    const decision = await kp.waitForDecision(requestId, { wait: false });
+    if (decision.outcome !== "approved" && decision.outcome !== "rejected") throw new Error(`Request is ${decision.outcome}, nothing to record yet.`);
+    const check = await call("/api/check", body, { "x-demo-session": "local-cli-check" });
+    if (!check.card) throw new Error(check.classification.error);
+    await call("/api/outcome", { check_id: check.check_id, outcome: decision.outcome, kite_request_id: requestId }, { authorization: "Bearer local-cli" });
+    console.log(`Kite says ${decision.outcome}. Recorded under ${check.card.label}.`);
+    return;
+  }
+
   if (cmd === "sync") {
     // Approvals come from `kpass activity`; what was asked for comes from `kpass user sessions`.
     const [events, sessions] = await Promise.all([kp.approvalEvents(), kp.userSessions()]);
