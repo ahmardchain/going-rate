@@ -48,11 +48,16 @@ export async function createSession({ taskSummary, perTx, total, ttlHours }) {
 /** kpass session status --wait — blocks until the passkey decision. Returns "approved" | "rejected" | other. */
 export async function waitForDecision(requestId) {
   const out = await kpass(["session", "status", "--request-id", requestId, "--wait", "--timeout", "900", "--no-interactive"], 16 * 60_000);
-  const d = out.data ?? out;
-  const status = String(first(d.status, d.state, d.session?.status, "unknown")).toLowerCase();
-  if (/active|approved/.test(status)) return { outcome: "approved", sessionId: first(d.session_id, d.sessionId, d.session?.id), raw: out };
-  if (/reject|denied|declined|cancel/.test(status)) return { outcome: "rejected", raw: out };
-  return { outcome: status, raw: out };
+  // kpass 6.13.2: top-level `status` is the command envelope ("success"), not the
+  // decision. An approved request returns `session.status: "active"` plus a session_id.
+  const s = out.session ?? {};
+  const decision = String(first(s.status, out.request_status, out.session_request?.status, "")).toLowerCase();
+  const hint = String(out.hint ?? "").toLowerCase();
+  if (/active|approved/.test(decision) || (out.session_id && /approved/.test(hint))) {
+    return { outcome: "approved", sessionId: first(out.session_id, s.id), raw: out };
+  }
+  if (/reject|denied|declined|cancel/.test(decision + " " + hint)) return { outcome: "rejected", raw: out };
+  return { outcome: decision || "pending", raw: out };
 }
 
 // Pages through a list command (the CLI caps --limit at 100).
