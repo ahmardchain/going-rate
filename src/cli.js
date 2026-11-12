@@ -6,7 +6,8 @@
 //                     Shows the card, asks Kite for the session, waits for the
 //                     passkey decision, records the outcome. Without caps it asks
 //                     at the going rate's suggested caps.
-//   going-rate sync   [--limit 100]   Reads `kpass activity --kind session_approval` into the local pool.
+//   going-rate sync   Joins `kpass activity --kind session_approval` with `kpass user sessions`
+//                     and adds your approved asks to the local pool.
 //
 // Env: SERV_API_KEY (required). GOING_RATE_URL + INGEST_TOKEN (optional) also
 // send verified outcomes to a hosted pool.
@@ -100,17 +101,20 @@ async function main() {
   }
 
   if (cmd === "sync") {
-    const asks = kp.sessionAsksFromActivity(await kp.activity({ limit: Number(opt("limit") ?? 100) }));
+    // Approvals come from `kpass activity`; what was asked for comes from `kpass user sessions`.
+    const [events, sessions] = await Promise.all([kp.approvalEvents(), kp.userSessions()]);
+    const asks = kp.asksFromKite(events, sessions);
     const known = new Set((await store.listOutcomes()).map((r) => r.kite_request_id).filter(Boolean));
     let added = 0;
     for (const a of asks) {
-      if (a.kite_request_id && known.has(a.kite_request_id)) continue;
-      const cls = await classify({ taskSummary: a.task_summary }, { apiKey: env.SERV_API_KEY });
-      if (!cls.ok) continue;
-      await store.appendOutcome({ id: crypto.randomUUID(), task_type: cls.task_type, ...a, source: "kpass-activity", seeded: false, kite_verified: true, scope: "global", at: a.at ?? new Date().toISOString() });
+      if (known.has(a.kite_request_id)) continue;
+      const cls = await classify({ taskSummary: a.task_summary, paymentContext: a.payment_context }, { apiKey: env.SERV_API_KEY });
+      if (!cls.ok) { console.log(`  skipped "${a.task_summary}": ${cls.error}`); continue; }
+      await store.appendOutcome({ id: crypto.randomUUID(), task_type: cls.task_type, ...a, source: "kpass-activity", seeded: false, kite_verified: true, scope: "global" });
+      console.log(`  + ${cls.task_type.padEnd(17)} $${a.per_tx_usd}/payment, $${a.total_usd} total, ${a.ttl_hours}h  "${a.task_summary}"`);
       added++;
     }
-    console.log(`Read ${asks.length} session asks from kpass activity, added ${added} to the pool.`);
+    console.log(`Read ${events.length} approval events and ${sessions.length} sessions from Kite; ${asks.length} approved asks matched, ${added} new added to the pool.`);
     return;
   }
 

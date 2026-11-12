@@ -55,31 +55,62 @@ export async function waitForDecision(requestId) {
   return { outcome: status, raw: out };
 }
 
-/** kpass activity --kind session_approval — raw events (the CLI caps --limit at 100). */
-export async function activity({ limit = 100, offset = 0 } = {}) {
-  const args = ["activity", "--kind", "session_approval", "--limit", String(Math.min(limit, 100)), "--offset", String(offset)];
-  const out = await kpass(args);
-  return Array.isArray(out) ? out : first(out.events, out.data, out.items, out.activity) ?? [];
+// Pages through a list command (the CLI caps --limit at 100).
+async function listAll(args, key, max = 500) {
+  const all = [];
+  for (let offset = 0; offset < max; offset += 100) {
+    const out = await kpass([...args, "--limit", "100", "--offset", String(offset), "--no-interactive"]);
+    const page = out[key] ?? [];
+    all.push(...page);
+    if (page.length < 100 || all.length >= (out.total ?? Infinity)) break;
+  }
+  return all;
 }
 
+/** `kpass activity --kind session_approval`: passkey approval events. They carry ids only. */
+export const approvalEvents = () => listAll(["activity", "--kind", "session_approval"], "events");
+
+/** `kpass user sessions`: every session with its delegation (task summary, caps, scope) and usage. */
+export const userSessions = () => listAll(["user", "sessions"], "sessions");
+
 /**
- * Turn activity events into past asks. Kite documents the command but not the
- * event schema, so this reads defensively and skips anything it can't map.
+ * Join the two into past asks. Activity says a session was approved with a
+ * passkey; `user sessions` says what was asked for. Shapes as returned by
+ * kpass 6.13.2:
+ *   activity event:  { kind: "session_approval", details: { session: { session_id, request_id }, stepup: { uv_attested } }, occurred_at }
+ *   user session:    { id, created_at, expires_at, delegation: { task: { summary }, payment_policy: { max_amount_per_tx, max_total_amount },
+ *                      execution_constraints: { x402: { allowed_endpoints: [{ host, path_prefix }] } } }, usage: { spent_total } }
  * Returns records without task_type; the caller classifies them with SERV.
  */
-export function sessionAsksFromActivity(events) {
-  const out = [];
+export function asksFromKite(events, sessions) {
+  const approvals = new Map();
   for (const e of events) {
-    const kind = String(first(e.kind, e.type, e.event, e.action, "")).toLowerCase();
-    if (!/session/.test(kind)) continue;
-    const s = e.session ?? e.data ?? e.details ?? e;
-    const outcome = /approv|activ/.test(kind) ? "approved" : /reject|deni|declin/.test(kind) ? "rejected" : null;
-    const total = Number(first(s.max_total_amount, s.maxTotalAmount, s.total_limit, s.budget));
-    const perTx = Number(first(s.max_amount_per_tx, s.maxAmountPerTx, s.per_tx_limit));
-    const ttlHours = parseTtlHours(first(s.ttl, s.ttl_hours));
-    const summary = first(s.task_summary, s.taskSummary, s.summary, s.description);
-    if (!outcome || !summary || !(total > 0) || !(perTx > 0) || !(ttlHours > 0)) continue;
-    out.push({ kite_request_id: first(s.request_id, s.id, e.id), task_summary: String(summary), per_tx_usd: perTx, total_usd: total, ttl_hours: ttlHours, outcome, at: first(e.created_at, e.timestamp, e.at) });
+    const s = e?.details?.session;
+    if (e?.kind === "session_approval" && s?.session_id) approvals.set(s.session_id, { requestId: s.request_id, at: e.occurred_at ?? e.created_at, passkey: e.details?.stepup?.uv_attested === true });
+  }
+  const out = [];
+  for (const s of sessions) {
+    const approval = approvals.get(s.id);
+    const d = s.delegation ?? {};
+    const perTx = Number(d.payment_policy?.max_amount_per_tx);
+    const total = Number(d.payment_policy?.max_total_amount);
+    const ttlHours = (Date.parse(s.expires_at) - Date.parse(s.created_at)) / 3_600_000;
+    const summary = d.task?.summary;
+    if (!approval || !summary || !(perTx > 0) || !(total > 0) || !(ttlHours > 0)) continue;
+    const ep = d.execution_constraints?.x402?.allowed_endpoints?.[0];
+    out.push({
+      kite_request_id: approval.requestId ?? s.id,
+      kite_session_id: s.id,
+      task_summary: String(summary),
+      payment_context: ep ? `${ep.host}${ep.path_prefix ?? ""}` : null,
+      per_tx_usd: perTx,
+      total_usd: total,
+      ttl_hours: Math.round(ttlHours * 100) / 100,
+      spent_usd: Number(s.usage?.spent_total ?? 0),
+      passkey_verified: approval.passkey,
+      outcome: "approved",
+      at: approval.at ?? s.created_at,
+    });
   }
   return out;
 }
