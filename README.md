@@ -38,8 +38,8 @@ SERV does one job: it turns free-text task summaries into a stable category.
 
 It's built on Kite Passport features that are live today:
 
-- **Sessions:** `kpass session create` (task summary, `--max-amount-per-tx`, `--max-total-amount`, `--ttl`, USDC), the passkey approval link, and `kpass session status --wait` for the decision. The "Too low" cue is about avoiding `session_total_exceeded` mid-run.
-- **History:** `going-rate sync` reads `kpass activity` (with `--since`) and adds past session decisions to the pool.
+- **Sessions:** `kpass session create --separate` (task summary, `--max-amount-per-tx`, `--max-total-amount`, `--ttl`, USDC; `--separate` so the ask always goes to a passkey approval instead of silently using the allowance), the passkey approval link, and `kpass session status --wait` for the decision. The "Too low" cue is about avoiding `session_total_exceeded` mid-run.
+- **History:** `going-rate sync` reads `kpass activity --kind session_approval` and adds past session decisions to the pool.
 - Going Rate does not build on DIDs, VCs, escrow, streaming or conditional payments.
 
 ## What's real and what's seeded
@@ -81,7 +81,7 @@ SERV_API_KEY=... node src/cli.js check --summary "Generate 20 product thumbnails
 SERV_API_KEY=... node src/cli.js ask --summary "Make 15 blog header images"
 
 # Add past session decisions from kpass activity to the pool
-SERV_API_KEY=... node src/cli.js sync --since 2026-10-01
+SERV_API_KEY=... node src/cli.js sync
 ```
 
 Behind an HTTPS proxy, add `NODE_USE_ENV_PROXY=1`.

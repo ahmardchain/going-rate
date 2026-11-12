@@ -34,6 +34,11 @@ export async function createSession({ taskSummary, perTx, total, ttlHours }) {
     "--max-total-amount", String(total),
     "--ttl", `${Math.max(1, Math.round(ttlHours))}h`,
     "--assets", "USDC",
+    // Always a separately passkey-approved session: without --separate, kpass may
+    // pay from the account allowance and no approval (and no going-rate card) happens.
+    "--separate",
+    "--no-reuse",
+    "--no-browser",
     "--no-interactive",
   ]);
   const d = out.data ?? out;
@@ -42,7 +47,7 @@ export async function createSession({ taskSummary, perTx, total, ttlHours }) {
 
 /** kpass session status --wait — blocks until the passkey decision. Returns "approved" | "rejected" | other. */
 export async function waitForDecision(requestId) {
-  const out = await kpass(["session", "status", "--request-id", requestId, "--wait", "--no-interactive"], 15 * 60_000);
+  const out = await kpass(["session", "status", "--request-id", requestId, "--wait", "--timeout", "900", "--no-interactive"], 16 * 60_000);
   const d = out.data ?? out;
   const status = String(first(d.status, d.state, d.session?.status, "unknown")).toLowerCase();
   if (/active|approved/.test(status)) return { outcome: "approved", sessionId: first(d.session_id, d.sessionId, d.session?.id), raw: out };
@@ -50,10 +55,9 @@ export async function waitForDecision(requestId) {
   return { outcome: status, raw: out };
 }
 
-/** kpass activity — raw events. */
-export async function activity({ since, limit = 200 } = {}) {
-  const args = ["activity", "--limit", String(limit)];
-  if (since) args.push("--since", since);
+/** kpass activity --kind session_approval — raw events (the CLI caps --limit at 100). */
+export async function activity({ limit = 100, offset = 0 } = {}) {
+  const args = ["activity", "--kind", "session_approval", "--limit", String(Math.min(limit, 100)), "--offset", String(offset)];
   const out = await kpass(args);
   return Array.isArray(out) ? out : first(out.events, out.data, out.items, out.activity) ?? [];
 }

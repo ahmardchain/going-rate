@@ -6,7 +6,7 @@
 //                     Shows the card, asks Kite for the session, waits for the
 //                     passkey decision, records the outcome. Without caps it asks
 //                     at the going rate's suggested caps.
-//   going-rate sync   [--since YYYY-MM-DD]   Reads `kpass activity` into the local pool.
+//   going-rate sync   [--limit 100]   Reads `kpass activity --kind session_approval` into the local pool.
 //
 // Env: SERV_API_KEY (required). GOING_RATE_URL + INGEST_TOKEN (optional) also
 // send verified outcomes to a hosted pool.
@@ -100,7 +100,7 @@ async function main() {
   }
 
   if (cmd === "sync") {
-    const asks = kp.sessionAsksFromActivity(await kp.activity({ since: opt("since") }));
+    const asks = kp.sessionAsksFromActivity(await kp.activity({ limit: Number(opt("limit") ?? 100) }));
     const known = new Set((await store.listOutcomes()).map((r) => r.kite_request_id).filter(Boolean));
     let added = 0;
     for (const a of asks) {
