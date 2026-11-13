@@ -21,10 +21,20 @@ function kvStore(kv) {
   };
 }
 
+// Fallback if the KV binding is missing: outcomes live only as long as this
+// isolate, so the demo still works but decisions don't persist.
+const memory = { outcomes: [], checks: new Map() };
+const memoryStore = {
+  listOutcomes: async () => memory.outcomes,
+  appendOutcome: async (r) => { memory.outcomes.push(r); memory.outcomes.splice(0, memory.outcomes.length - MAX_OUTCOMES); },
+  putCheck: async (id, c) => { memory.checks.set(id, c); },
+  getCheck: async (id) => memory.checks.get(id) ?? null,
+};
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    if (url.pathname.startsWith("/api/")) return handle(request, env, kvStore(env.GOING_RATE));
+    if (url.pathname.startsWith("/api/")) return handle(request, env, env.GOING_RATE ? kvStore(env.GOING_RATE) : memoryStore);
     return env.ASSETS.fetch(request);
   },
 };

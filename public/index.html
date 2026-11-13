@@ -175,7 +175,7 @@ catch { sid = crypto.randomUUID(); }
 async function api(path, body) {
   const res = await fetch(path, { method: body ? "POST" : "GET", headers: { "Content-Type": "application/json", "x-demo-session": sid }, body: body ? JSON.stringify(body) : undefined });
   const out = await res.json();
-  if (!res.ok) throw new Error(out.error || `HTTP ${res.status}`);
+  if (!res.ok) throw new Error(out.detail || out.error || `HTTP ${res.status}`);
   return out;
 }
 

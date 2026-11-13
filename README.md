@@ -114,11 +114,12 @@ Behind an HTTPS proxy, add `NODE_USE_ENV_PROXY=1`.
 ## Deploy (Cloudflare Workers)
 
 ```bash
-npx wrangler kv namespace create GOING_RATE   # paste the id into wrangler.toml
+npx wrangler deploy                           # creates the GOING_RATE KV namespace on first deploy
 npx wrangler secret put SERV_API_KEY
 npx wrangler secret put INGEST_TOKEN          # optional: lets the CLI send verified outcomes
-npx wrangler deploy
 ```
+
+With Cloudflare's Git integration (Workers Builds), the deploy runs on every push. Set `SERV_API_KEY` once under Worker > Settings > Variables and Secrets, as a secret.
 
 ## Layout
 

@@ -36,6 +36,9 @@ function provenance(records, taskType) {
 async function classifyOrFail(body, env) {
   const task_summary = String(body.task_summary ?? "").trim().slice(0, 500);
   if (!task_summary) throw new RangeError("task_summary is required");
+  if (!env.SERV_API_KEY && !env.fetchImpl) {
+    throw new Error("SERV_API_KEY is not set on this deployment. Add it as a secret (Worker > Settings > Variables and Secrets).");
+  }
   const payment_context = body.payment_context ? String(body.payment_context).slice(0, 200) : null;
   const classification = await classify({ taskSummary: task_summary, paymentContext: payment_context }, { apiKey: env.SERV_API_KEY, fetchImpl: env.fetchImpl });
   return { task_summary, payment_context, classification };
