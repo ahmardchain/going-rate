@@ -73,6 +73,36 @@ export async function waitForDecision(requestId, { wait = true } = {}) {
   return { outcome: decision || "pending", raw: out };
 }
 
+/**
+ * kpass session execute: pay for one x402 call from an approved session.
+ * Never falls back to the account allowance (no --use-allowance). Returns
+ * { ok: true, raw } or { ok: false, code, message, raw } where code is Kite's
+ * session error (session_rule_exceeded, session_total_exceeded, ...).
+ */
+export async function executePaid({ sessionId, url, method = "POST", body, headers, idempotencyKey }) {
+  const args = ["session", "execute", "--url", url, "--method", method, "--idempotency-key", idempotencyKey, "--no-browser", "--no-interactive"];
+  if (sessionId) args.push("--session-id", sessionId);
+  if (headers || body) args.push("--headers", JSON.stringify({ "Content-Type": "application/json", ...(headers ?? {}) }));
+  if (body !== undefined) args.push("--body", typeof body === "string" ? body : JSON.stringify(body));
+  try {
+    return { ok: true, raw: await kpass(args, 10 * 60_000) };
+  } catch (err) {
+    const text = err.kpassOutput ?? err.message;
+    const code = (text.match(/\b(session_[a-z_]+|payment_[a-z_]+)\b/) ?? [])[1] ?? null;
+    let raw; try { raw = JSON.parse(text.slice(0, text.indexOf("\n}") + 2)); } catch { raw = { text: text.slice(0, 2000) }; }
+    return { ok: false, code, message: err.message, raw };
+  }
+}
+
+/** The agent's current session id (set by `kpass session status` after an approval). */
+export async function currentSessionId() {
+  const out = await kpass(["session", "list", "--local", "--no-interactive"]);
+  return out.current_session_id ?? null;
+}
+
+/** `kpass activity --kind x402_payment`: the source of truth for what was charged. */
+export const paymentEvents = () => listAll(["activity", "--kind", "x402_payment"], "events");
+
 // Pages through a list command (the CLI caps --limit at 100).
 async function listAll(args, key, max = 500) {
   const all = [];

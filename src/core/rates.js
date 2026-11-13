@@ -69,6 +69,23 @@ export function similarAskApproval(records, taskType, totalUsd) {
 
 const money = (v) => (v == null ? "?" : `$${v < 1 ? v.toFixed(2) : v.toFixed(v % 1 ? 2 : 0)}`);
 
+export const KITE_SUMMARY_MAX = 240;
+
+/**
+ * The text passed to `kpass session create --task-summary`, so the going rate
+ * appears on Kite's own approval screen. Built by code from the card, never by SERV.
+ * e.g. "Make 15 blog header images | Going rate (image generation, 11 approvals): $5.67 total, $0.52/payment, 2h. This ask: $6.53, $0.56/payment, 2h - IN LINE"
+ */
+export function kiteTaskSummary(taskSummary, card) {
+  const cueText = { high: "HIGH", low: "LOW", in_line: "IN LINE" }[card.overall];
+  if (!cueText) return String(taskSummary).slice(0, KITE_SUMMARY_MAX);
+  const d = card.dims;
+  const tail = ` | Going rate (${(card.label ?? card.task_type).toLowerCase()}, ${card.rate.n} approvals): ${money(d.total_usd.median)} total, ${money(d.per_tx_usd.median)}/payment, ${Math.round(d.ttl_hours.median)}h. This ask: ${money(d.total_usd.requested)}, ${money(d.per_tx_usd.requested)}/payment, ${Math.round(d.ttl_hours.requested)}h - ${cueText}`;
+  const room = KITE_SUMMARY_MAX - tail.length;
+  const head = String(taskSummary).trim();
+  return (head.length > room ? head.slice(0, Math.max(0, room - 1)).trimEnd() + "…" : head) + tail;
+}
+
 /**
  * Everything the approval card shows. `ask` = { per_tx_usd, total_usd, ttl_hours }.
  * The card informs the first ask; it never blocks the spend.
@@ -100,7 +117,10 @@ export function buildCard(records, taskType, ask) {
   } else if (overall === "high") {
     notes.push(`This asks for ${dims.total_usd.x_median}x the usual total. People usually approve about ${money(dims.total_usd.median)}.`);
   } else if (overall === "low") {
-    notes.push(`This is below what similar tasks usually need. The agent is likely to hit session_total_exceeded mid-run and have to ask again.`);
+    // Name the Kite error the agent would actually hit first.
+    notes.push(dims.per_tx_usd.cue === "low"
+      ? `The per-payment cap is below what a single call of this type usually costs, so Kite may refuse the first payment (session_rule_exceeded) and the agent has to ask again.`
+      : `This is below what similar tasks usually need. The agent is likely to hit session_total_exceeded mid-run and have to ask again.`);
   } else {
     notes.push(`In line with what people usually approve for this task type.`);
   }

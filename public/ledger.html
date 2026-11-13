@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Going Rate Ledger</title>
+<meta name="description" content="Every real Kite Passport payment Going Rate made: task type, listed price vs charged price, transaction link and time.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23163a2e'/><path d='M7 22h18M9 18l5-6 4 4 5-7' stroke='%2384e1b8' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<main>
+  <nav class="top"><a href="/">Approval card</a><a href="/contrast">Contrast demo</a><a href="/ledger" aria-current="page">Ledger</a></nav>
+  <h1>Ledger</h1>
+  <p class="lede">Every real payment Going Rate made through Kite Passport, read from Kite's own history (<code>kpass activity --kind x402_payment</code>). Nothing on this page is seeded.</p>
+
+  <div class="stats" id="stats"></div>
+
+  <section class="more">
+    <h2>Payments</h2>
+    <p class="honest" style="margin-top:0">Listed is the price in Kite's service catalog. Charged is what Kite's activity records for the call. The task type comes from SERV Reasoning.</p>
+    <div class="panel wide"><table id="payments"><tr><td>Loading…</td></tr></table></div>
+  </section>
+
+  <section class="more">
+    <h2>Real charged price by task type</h2>
+    <div class="panel wide"><table id="bytype"><tr><td>Loading…</td></tr></table></div>
+  </section>
+
+  <section class="more">
+    <h2>Kite-verified session decisions</h2>
+    <p class="honest" style="margin-top:0">Approvals and rejections made with a passkey on Kite, confirmed through <code>kpass session status</code> or <code>kpass user sessions</code>. These feed the going rate alongside the seeded pool.</p>
+    <div class="panel wide"><table id="decisions"><tr><td>Loading…</td></tr></table></div>
+  </section>
+
+  <p class="fine" id="generated"></p>
+</main>
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const money = (v) => (v == null ? "–" : `$${Number(v) > 0 && Number(v) < 0.01 ? Number(v).toFixed(5).replace(/0+$/, "") : Number(v).toFixed(2)}`);
+const when = (iso) => (iso ? new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) : "–");
+const LABELS = { "data-api-lookup": "Data API lookups", "llm-inference": "LLM inference", "image-generation": "Image generation", "audio-generation": "Audio and speech",
+  "video-generation": "Video generation", "web-scraping": "Web scraping", "cloud-compute": "Cloud compute", other: "Other" };
+const label = (t) => LABELS[t] ?? t ?? "–";
+
+function diff(listed, charged) {
+  if (listed == null || charged == null) return "–";
+  if (Math.abs(charged - listed) < 1e-9) return '<span class="tag good">as listed</span>';
+  const pct = listed ? Math.round(((charged - listed) / listed) * 100) : null;
+  return `<span class="tag ${charged > listed ? "bad" : "good"}">${charged > listed ? "+" : ""}${money(charged - listed).replace("$-", "-$")}${pct != null ? ` (${pct > 0 ? "+" : ""}${pct}%)` : ""}</span>`;
+}
+
+Promise.all([
+  fetch("/ledger.json").then((r) => r.json()),
+  fetch("/api/verified").then((r) => r.json()).catch(() => ({ records: [] })),
+]).then(([ledger, verified]) => {
+  const rows = ledger.rows ?? [];
+  const paid = rows.filter((r) => r.charged_usd > 0);
+  const total = paid.reduce((s, r) => s + r.charged_usd, 0);
+  const types = new Set(paid.map((r) => r.task_type).filter(Boolean));
+  $("#stats").innerHTML = `
+    <div><b>${paid.length}</b><span>real paid calls</span></div>
+    <div><b>${types.size}</b><span>task types with real prices</span></div>
+    <div><b>${money(total)}</b><span>charged in total</span></div>
+    <div><b>${(verified.records ?? []).length}</b><span>Kite-verified session decisions</span></div>`;
+
+  $("#payments").innerHTML = `<tr><th>Time</th><th>Task type</th><th>Service</th><th class="num">Listed</th><th class="num">Charged</th><th>Charged vs listed</th><th>Transaction</th></tr>` +
+    (rows.length ? rows.map((r) => `<tr>
+      <td>${when(r.at)}</td><td>${esc(label(r.task_type))}</td>
+      <td>${esc(r.service)}<div class="fine" style="margin:0">${esc(r.task_summary ?? r.request_url)}</div></td>
+      <td class="num">${money(r.listed_usd)}</td><td class="num"><b>${money(r.charged_usd)}</b></td><td>${diff(r.listed_usd, r.charged_usd)}</td>
+      <td>${r.tx_url ? `<a href="${esc(r.tx_url)}" target="_blank" rel="noopener">${esc(r.tx_hash.slice(0, 10))}…</a>` : r.tx_hash ? esc(r.tx_hash.slice(0, 12)) + "…" : `<span class="fine">${r.charged_usd === 0 ? "free call, no transfer" : "pending"}</span>`}</td>
+    </tr>`).join("") : `<tr><td colspan="7">No payments yet.</td></tr>`);
+
+  const bt = Object.entries(ledger.by_type ?? {});
+  $("#bytype").innerHTML = `<tr><th>Task type</th><th class="num">Paid calls</th><th class="num">Charged per call (min / median / max)</th><th>Last paid</th></tr>` +
+    (bt.length ? bt.map(([t, s]) => `<tr><td>${esc(label(t))}</td><td class="num">${s.calls}</td>
+      <td class="num">${money(s.charged_min)} / ${money(s.charged_median)} / ${money(s.charged_max)}</td><td>${when(s.last_paid_at)}</td></tr>`).join("")
+      : `<tr><td colspan="4">No paid calls yet.</td></tr>`);
+
+  const recs = [...(verified.records ?? [])].reverse();
+  $("#decisions").innerHTML = `<tr><th>Time</th><th>Task type</th><th>Task</th><th class="num">Per payment</th><th class="num">Total</th><th class="num">Duration</th><th>Passkey</th></tr>` +
+    (recs.length ? recs.map((r) => `<tr><td>${when(r.at)}</td><td>${esc(label(r.task_type))}</td><td>${esc(r.task_summary)}</td>
+      <td class="num">${money(r.per_tx_usd)}</td><td class="num">${money(r.total_usd)}</td><td class="num">${Math.round(r.ttl_hours)}h</td>
+      <td><span class="tag ${r.outcome === "approved" ? "good" : "bad"}">${esc(r.outcome)}</span></td></tr>`).join("")
+      : `<tr><td colspan="7">None yet.</td></tr>`);
+
+  $("#generated").textContent = `Ledger generated ${when(ledger.generated_at)} from ${ledger.source}. Verified decisions updated ${when(verified.updated_at)}.`;
+}).catch((e) => { $("#payments").innerHTML = `<tr><td class="err">${esc(e.message)}</td></tr>`; });
+</script>
+</body>
+</html>

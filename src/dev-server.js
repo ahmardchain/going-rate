@@ -14,11 +14,15 @@ const env = { SERV_API_KEY: process.env.SERV_API_KEY, INGEST_TOKEN: process.env.
 http.createServer(async (req, res) => {
   const url = `http://localhost:${PORT}${req.url}`;
   if (!req.url.startsWith("/api/")) {
-    const file = req.url === "/" ? "index.html" : req.url.slice(1).replace(/\.\./g, "");
+    // Same paths as Workers static assets: "/" -> index.html, "/ledger" -> ledger.html.
+    const path = req.url.split("?")[0].replace(/\.\./g, "");
+    const file = path === "/" ? "index.html" : /\.[a-z]+$/.test(path) ? path.slice(1) : `${path.slice(1)}.html`;
     try {
-      const type = file.endsWith(".html") ? "text/html; charset=utf-8" : file.endsWith(".svg") ? "image/svg+xml" : "text/plain";
+      const TYPES = { html: "text/html; charset=utf-8", css: "text/css; charset=utf-8", json: "application/json", svg: "image/svg+xml", png: "image/png" };
+      const type = TYPES[file.split(".").pop()] ?? "text/plain";
+      const content = await readFile(root(`../public/${file}`)); // read first, so a missing file can still 404
       res.writeHead(200, { "Content-Type": type });
-      return res.end(await readFile(root(`../public/${file}`)));
+      return res.end(content);
     } catch { res.writeHead(404); return res.end("not found"); }
   }
   const chunks = [];

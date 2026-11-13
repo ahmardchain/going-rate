@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Going Rate Contrast</title>
+<meta name="description" content="The same Kite payment, asked two ways: the docs-example caps fail on the first call, Going Rate's caps pass on the first passkey approval.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23163a2e'/><path d='M7 22h18M9 18l5-6 4 4 5-7' stroke='%2384e1b8' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<main>
+  <nav class="top"><a href="/">Approval card</a><a href="/contrast" aria-current="page">Contrast demo</a><a href="/ledger">Ledger</a></nav>
+  <h1>Same job, two asks</h1>
+  <p class="lede" id="lede">One real paid call through Kite Passport, asked twice. On the left, the caps from Kite's docs example ($1 per payment, $5 total). On the right, Going Rate's suggested caps.</p>
+  <div id="task"></div>
+  <div class="vs" id="vs"><div class="panel">Loading…</div></div>
+  <p class="fine" id="generated"></p>
+</main>
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const money = (v) => (v == null ? "–" : `$${Number(v).toFixed(2)}`);
+const when = (iso) => (iso ? new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "medium" }) : "–");
+const CUE = { high: "HIGH", low: "LOW", in_line: "IN LINE" };
+
+function column(p, ledgerRows, quoted) {
+  const left = p.phase === "docs_default";
+  const tx = ledgerRows.find((r) => r.session_id && r.session_id === p.session_id && r.charged_usd > 0);
+  const result = p.decision !== "approved" ? `<div class="result bad">Passkey: ${esc(p.decision)}. No call was made.</div>`
+    : p.paid ? `<div class="result good">First paid call succeeded on the first approval.${tx ? ` Charged ${money(tx.charged_usd)} · ${tx.tx_url ? `<a href="${esc(tx.tx_url)}" target="_blank" rel="noopener">transaction</a>` : "transaction recorded"}` : ""}</div>`
+    : `<div class="result bad">First paid call refused by Kite: <code>${esc(p.kite_error ?? "error")}</code>. The agent has to stop and ask you again.</div>`;
+  return `<div class="sheet">
+    <div class="kicker">${left ? "Docs-example caps" : "Going Rate's caps"}</div>
+    <h3>${money(p.caps.per_tx_usd)} per payment · ${money(p.caps.total_usd)} total · ${Math.round(p.caps.ttl_hours)}h</h3>
+    ${p.cue ? `<span class="cue ${p.cue}">${CUE[p.cue] ?? p.cue}</span>` : ""}
+    <ol>
+      <li><b>Going Rate card</b>${esc(p.explanation?.text ?? "")}${p.explanation ? `<div class="fine" style="margin:4px 0 0">${p.explanation.source === "serv" ? `Written by SERV Reasoning (${esc(p.serv?.model)}), request ${esc(p.serv?.explain_request_id)}` : "Template sentence (SERV unavailable)"}</div>` : ""}</li>
+      <li><b>On Kite's approval screen</b><span class="kite-summary" style="display:block">${esc(p.kite_task_summary)}</span></li>
+      <li><b>Passkey</b>${esc(p.decision)} at ${when(p.at)} <span class="fine">(Kite request ${esc(p.kite_request_id)})</span></li>
+      <li><b>First paid call</b>${quoted != null ? `Quoted ${money(quoted)} by the merchant. ` : ""}${p.paid ? "Paid" : p.kite_error ? `Refused: <code>${esc(p.kite_error)}</code>` : "Not made"}${p.paid_at ? ` at ${when(p.paid_at)}` : ""}</li>
+    </ol>
+    ${result}
+  </div>`;
+}
+
+Promise.all([
+  fetch("/contrast.json").then((r) => (r.ok ? r.json() : null)).catch(() => null),
+  fetch("/ledger.json").then((r) => r.json()).catch(() => ({ rows: [] })),
+]).then(([c, ledger]) => {
+  if (!c?.phases?.length) {
+    $("#vs").innerHTML = `<div class="panel">The real contrast run hasn't been recorded yet. It runs through the CLI (<code>going-rate contrast</code>) with real passkey approvals, and this page shows its result. Nothing here is simulated.</div>`;
+    return;
+  }
+  $("#task").innerHTML = `<div class="panel"><div class="kicker" style="font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">The job</div>
+    <h2 style="margin-top:4px">${esc(c.task_summary)}</h2>
+    <p class="fine">Paid endpoint <code>${esc(c.url)}</code>. The merchant quoted ${money(c.quoted_price_usd)} for this exact call (its unpaid 402 challenge), above the $1 per-payment cap.</p></div>`;
+  $("#vs").innerHTML = c.phases.map((p) => column(p, ledger.rows ?? [], c.quoted_price_usd)).join("");
+  $("#generated").textContent = `Recorded ${when(c.generated_at)} with real Kite Passport sessions and passkey approvals.`;
+});
+</script>
+</body>
+</html>

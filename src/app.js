@@ -1,8 +1,11 @@
 // Platform-neutral request handler, shared by the Cloudflare Worker and the
 // local Node dev server. `store` abstracts where outcomes live (KV or a file).
 import seed from "../data/seed-pool.json" with { type: "json" };
-import { classify, SERV_MODEL } from "./core/serv.js";
-import { buildCard, goingRate, suggestedCaps } from "./core/rates.js";
+// Real, Kite-verified session decisions (exported by `going-rate ledger` from
+// kpass session status / kpass user sessions). Committed, so every deploy has them.
+import verified from "../data/verified-pool.json" with { type: "json" };
+import { classify, explain, explanationFacts, SERV_MODEL } from "./core/serv.js";
+import { buildCard, goingRate, suggestedCaps, kiteTaskSummary } from "./core/rates.js";
 import { TASK_TYPES, labelFor } from "./core/taxonomy.js";
 
 const json = (data, status = 200) =>
@@ -20,8 +23,11 @@ const scopeFor = (sid) => (sid && /^[a-z0-9-]{8,64}$/i.test(sid) ? `demo:${sid}`
 
 async function pool(store, sid) {
   const scope = scopeFor(sid);
-  const outcomes = (await store.listOutcomes()).filter((r) => r.scope === "global" || (scope && r.scope === scope));
-  return [...seed.records, ...outcomes];
+  const known = new Set(verified.records.map((r) => r.kite_request_id).filter(Boolean));
+  const outcomes = (await store.listOutcomes())
+    .filter((r) => r.scope === "global" || (scope && r.scope === scope))
+    .filter((r) => !r.kite_request_id || !known.has(r.kite_request_id));
+  return [...seed.records, ...verified.records, ...outcomes];
 }
 
 function provenance(records, taskType) {
@@ -51,7 +57,12 @@ export async function handle(request, env, store) {
 
   try {
     if (url.pathname === "/api/config") {
-      return json({ model: SERV_MODEL, task_types: TASK_TYPES, seed_note: seed.note, seed_records: seed.records.length });
+      return json({ model: SERV_MODEL, task_types: TASK_TYPES, seed_note: seed.note, seed_records: seed.records.length, verified_records: verified.records.length, verified_updated_at: verified.updated_at });
+    }
+
+    // Kite-verified session decisions (real approvals and rejections), for the ledger page.
+    if (url.pathname === "/api/verified") {
+      return json(verified);
     }
 
     // The rate card for every task type.
@@ -59,7 +70,8 @@ export async function handle(request, env, store) {
       const records = await pool(store, sid);
       return json(TASK_TYPES.map((t) => {
         const r = goingRate(records, t.id);
-        return { task_type: t.id, label: t.label, n: r.n, enough: r.enough, provenance: provenance(records, t.id),
+        const real = records.filter((x) => x.task_type === t.id && x.kite_verified).map((x) => x.at).sort();
+        return { task_type: t.id, label: t.label, n: r.n, enough: r.enough, provenance: provenance(records, t.id), last_verified_at: real.at(-1) ?? null,
           median: { per_tx_usd: r.per_tx_usd.median, total_usd: r.total_usd.median, ttl_hours: r.ttl_hours.median },
           suggestion: suggestedCaps(r) };
       }));
@@ -92,6 +104,17 @@ export async function handle(request, env, store) {
       const card = buildCard(records, classification.task_type, ask);
       card.label = labelFor(classification.task_type);
       card.provenance = provenance(records, classification.task_type);
+      // SERV call #2: one sentence explaining the card. Numbers come from code.
+      if (card.rate.enough) {
+        const d = card.dims;
+        const facts = explanationFacts({
+          label: card.label, ask, cue: card.overall, n: card.rate.n, suggestion: card.suggestion,
+          rate: { per_tx_usd: d.per_tx_usd.median, total_usd: d.total_usd.median, ttl_hours: d.ttl_hours.median, x_total: card.overall === "high" ? d.total_usd.x_median : null },
+        });
+        card.explanation = await explain(facts, task_summary, { apiKey: env.SERV_API_KEY, fetchImpl: env.fetchImpl });
+      }
+      card.kite_task_summary = kiteTaskSummary(task_summary, card);
+      card.serv = { model: SERV_MODEL, classify_request_id: classification.requestId ?? null, explain_request_id: card.explanation?.requestId ?? null };
       await store.putCheck(check_id, check);
       return json({ ...check, card });
     }

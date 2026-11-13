@@ -1,0 +1,24 @@
+{
+ "generated_at": "2026-11-13T23:59:45.259Z",
+ "source": "kpass activity --kind x402_payment",
+ "rows": [
+  {
+   "at": "2026-09-30T10:20:04.751266Z",
+   "status": "completed",
+   "task_type": "image-generation",
+   "task_summary": null,
+   "service": "Kite Services · Muse-Style PFP (free)",
+   "merchant_host": "kite-services.kiteai.dev",
+   "request_url": "https://kite-services.kiteai.dev/v1/image/edits",
+   "listed_usd": null,
+   "charged_usd": 0,
+   "chain": "kite",
+   "tx_hash": null,
+   "tx_url": null,
+   "session_id": "agent_session_01a0f1d3-b62d-70fb-843b-dbb770a5b5c3",
+   "activity_id": "activity_01a0f1d4-1b0f-742b-b8d9-f17b2e705ccc",
+   "classified_from": "request_url"
+  }
+ ],
+ "by_type": {}
+}

@@ -1,0 +1,52 @@
+{
+ "note": "Real session decisions confirmed through Kite Passport (kpass session status / kpass user sessions). Not seeded.",
+ "updated_at": "2026-11-13T23:59:45.268Z",
+ "records": [
+  {
+   "id": "0bc9bed3-300a-463a-8eac-f5f875b893c9",
+   "task_type": "image-generation",
+   "kite_request_id": "agent_session_req_01a0f1d0-6a3d-7050-8bd0-5960b2a9246d",
+   "kite_session_id": "agent_session_01a0f1d3-b62d-70fb-843b-dbb770a5b5c3",
+   "task_summary": "Generate a free Muse-Style PFP from my photo via Kite campaign.",
+   "payment_context": "kite-services.kiteai.dev/v1/image/edits",
+   "per_tx_usd": 0.01,
+   "total_usd": 0.05,
+   "ttl_hours": 1,
+   "spent_usd": 0,
+   "passkey_verified": true,
+   "outcome": "approved",
+   "at": "2026-09-30T10:19:38.925061Z",
+   "source": "kpass-activity",
+   "seeded": false,
+   "kite_verified": true
+  },
+  {
+   "id": "39774753-4541-453b-b9f3-20c8d111e943",
+   "task_type": "image-generation",
+   "task_summary": "Generate 20 product thumbnails via image API",
+   "per_tx_usd": 25,
+   "total_usd": 100,
+   "ttl_hours": 24,
+   "outcome": "rejected",
+   "source": "kpass-session",
+   "seeded": false,
+   "kite_verified": true,
+   "kite_request_id": "agent_session_req_01a1d042-238c-76f9-a87c-08e756adc52a",
+   "at": "2026-11-12T14:57:45.159Z"
+  },
+  {
+   "id": "bcd65ebf-b2b5-466f-a299-a6f6b3230651",
+   "task_type": "image-generation",
+   "task_summary": "Make 15 blog header images",
+   "per_tx_usd": 0.56,
+   "total_usd": 6.53,
+   "ttl_hours": 2,
+   "outcome": "approved",
+   "source": "kpass-session",
+   "seeded": false,
+   "kite_verified": true,
+   "kite_request_id": "agent_session_req_01a1d043-f879-716f-a4c8-c0c6752522cc",
+   "at": "2026-11-12T14:59:02.179Z"
+  }
+ ]
+}
