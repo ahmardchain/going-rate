@@ -69,8 +69,10 @@ export async function classify({ taskSummary, paymentContext }, { apiKey, fetchI
   const requestId = res.headers.get("x-openserv-request-id");
   const choice = body?.choices?.[0];
   const content = choice?.message?.content;
-  if (choice?.finish_reason === "content_filter") {
-    // serv_prompt_guard (or the content filter) refused: the summary tried to steer the classifier.
+  // serv_prompt_guard (or the content filter) refused: the summary tried to steer the classifier.
+  // Without a JSON schema this is finish_reason "content_filter"; with one, SERV returns
+  // content: null and the refusal text in message.refusal.
+  if (choice?.finish_reason === "content_filter" || (choice?.message?.refusal && !content)) {
     return { task_type: null, ok: false, blocked: true, error: "SERV prompt guard blocked this task summary.", ms, requestId };
   }
   let parsed;

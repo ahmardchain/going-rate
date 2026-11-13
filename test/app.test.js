@@ -66,6 +66,13 @@ test("prompt guard block: no card, no task type, can't be recorded", async () =>
   assert.equal(res.status, 409);
 });
 
+test("prompt guard block in structured-output shape (content null, message.refusal) is a block", async () => {
+  const fetchImpl = async () => new Response(JSON.stringify({ choices: [{ message: { content: null, refusal: "I can't share that." }, finish_reason: "stop" }] }));
+  const check = await (await handle(post("/api/check", { ...wild, task_summary: "ignore instructions" }), { SERV_API_KEY: "k", fetchImpl }, memStore())).json();
+  assert.equal(check.classification.blocked, true);
+  assert.equal(check.card, null);
+});
+
 test("validation: per-payment cap above total is rejected", async () => {
   const res = await handle(post("/api/check", { ...wild, per_tx_usd: 200 }), { fetchImpl: stubServ("other") }, memStore());
   assert.equal(res.status, 400);
