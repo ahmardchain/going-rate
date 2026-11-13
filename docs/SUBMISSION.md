@@ -2,7 +2,7 @@
 
 **Track:** Kite
 **Repo:** https://github.com/ahmardchain/going-rate
-**Live demo:** _add Cloudflare URL_
+**Live demo:** https://going-rate.ahmardchain.workers.dev/
 **Demo video:** _add link_
 **X post:** _add link_
 

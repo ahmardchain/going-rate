@@ -4,7 +4,7 @@
 
 Entry for **SERV Hackathon 02, Kite track**.
 
-- Live demo: _TBA (Cloudflare Workers)_
+- Live demo: https://going-rate.ahmardchain.workers.dev/
 - Demo video: _TBA_
 
 ## The gap
