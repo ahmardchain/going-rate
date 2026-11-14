@@ -17,6 +17,27 @@
     <span class="pill" id="model">SERV Reasoning</span><span class="pill">Kite Passport sessions</span><span class="pill">This page: passkey simulated</span>
   </header>
 
+  <section class="flow-wrap" aria-label="How Going Rate works">
+    <div class="flow" id="flow">
+      <div class="node" id="n-agent">
+        <div class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="7" width="16" height="12" rx="3"/><path d="M12 3v4M9 12h.01M15 12h.01M9 16h6"/></svg></div>
+        <b>Agent</b><span>drafts an ask: task summary + caps</span>
+      </div>
+      <div class="node serv-node" id="n-serv">
+        <div class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.5 5.5L20 10l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-1.5z"/></svg></div>
+        <b>SERV Reasoning</b><span>OpenServ inference API · classify + explain · <code>gpt-6-luna</code></span>
+      </div>
+      <div class="node" id="n-rate">
+        <div class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16M7 15l3-4 3 2 4-6"/></svg></div>
+        <b>Going Rate</b><span>code: p25 / median / p75, cue, suggested caps</span>
+      </div>
+      <div class="node" id="n-kite">
+        <div class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v2"/></svg></div>
+        <b>Kite Passport</b><span>going rate in <code>--task-summary</code> · passkey · pay</span>
+      </div>
+    </div>
+  </section>
+
   <div class="grid">
     <div>
       <div class="panel step" id="s1">
@@ -87,7 +108,7 @@
 </main>
 
 <script type="module">
-import { borderBeam, shimmer, shimmerAll } from "/ui.js";
+import { animatedBeam, borderBeam, shimmer, shimmerAll } from "/ui.js";
 const $ = (s, el = document) => el.querySelector(s);
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const money = (v) => (v == null ? "–" : `$${Number(v).toFixed(2)}`);
@@ -208,6 +229,15 @@ api("/api/config").then((c) => {
 }).catch(() => {});
 loadRates().catch((e) => { $("#rates").innerHTML = `<tr><td class="err">${esc(e.message)}</td></tr>`; });
 shimmerAll();
+
+// How it works: Agent -> SERV Reasoning (OpenServ) -> Going Rate -> Kite Passport, and the outcome flowing back.
+{
+  const flow = $("#flow"), ico = (id) => $(`#${id} .ico`);
+  animatedBeam(flow, ico("n-agent"), ico("n-serv"), { duration: 4 });
+  animatedBeam(flow, ico("n-serv"), ico("n-rate"), { duration: 4, delay: 0.6 });
+  animatedBeam(flow, ico("n-rate"), ico("n-kite"), { duration: 4, delay: 1.2 });
+  animatedBeam(flow, ico("n-kite"), ico("n-rate"), { duration: 4, delay: 2.2, reverse: true, curvature: -60, gradientStartColor: "#f2c46b", gradientStopColor: "#1f6b4f" });
+}
 </script>
 </body>
 </html>

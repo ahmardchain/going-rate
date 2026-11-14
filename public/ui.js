@@ -51,6 +51,52 @@ export function ticker(el) {
 
 export const tickAll = (root = document) => root.querySelectorAll("[data-ticker]").forEach(ticker);
 
+let beamSeq = 0;
+/**
+ * Animated Beam (Magic UI): a quadratic curve between the centers of `from` and `to`
+ * inside `container`, with a gradient that sweeps along it. Motion's linearGradient
+ * animation is reproduced with SVG <animate> and the same ease (0.16, 1, 0.3, 1).
+ */
+export function animatedBeam(container, from, to, {
+  curvature = 0, reverse = false, duration = 5, delay = 0, pathColor = "gray", pathWidth = 2, pathOpacity = 0.2,
+  gradientStartColor = "#34d399", gradientStopColor = "#2453ff",
+} = {}) {
+  const id = `beam-grad-${++beamSeq}`;
+  const NS = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(NS, "svg");
+  svg.setAttribute("fill", "none");
+  svg.setAttribute("class", "animated-beam");
+  svg.innerHTML = `
+    <path class="base" stroke="${pathColor}" stroke-width="${pathWidth}" stroke-opacity="${pathOpacity}" stroke-linecap="round"/>
+    <path class="glow" stroke="url(#${id})" stroke-width="${pathWidth}" stroke-opacity="1" stroke-linecap="round"/>
+    <defs><linearGradient id="${id}" gradientUnits="userSpaceOnUse">
+      <stop stop-color="${gradientStartColor}" stop-opacity="0"/>
+      <stop stop-color="${gradientStartColor}"/>
+      <stop offset="32.5%" stop-color="${gradientStopColor}"/>
+      <stop offset="100%" stop-color="${gradientStopColor}" stop-opacity="0"/>
+    </linearGradient></defs>`;
+  const grad = svg.querySelector("linearGradient");
+  const [x1, x2] = reverse ? [["90%", "-10%"], ["100%", "0%"]] : [["10%", "110%"], ["0%", "100%"]];
+  for (const [attr, [a, b]] of [["x1", x1], ["x2", x2]]) {
+    const anim = document.createElementNS(NS, "animate");
+    for (const [k, v] of Object.entries({ attributeName: attr, values: `${a};${b}`, dur: `${duration}s`, begin: `${delay}s`,
+      repeatCount: "indefinite", calcMode: "spline", keyTimes: "0;1", keySplines: "0.16 1 0.3 1" })) anim.setAttribute(k, v);
+    grad.appendChild(anim);
+  }
+  container.appendChild(svg);
+  const update = () => {
+    const c = container.getBoundingClientRect(), a = from.getBoundingClientRect(), b = to.getBoundingClientRect();
+    svg.setAttribute("width", c.width); svg.setAttribute("height", c.height); svg.setAttribute("viewBox", `0 0 ${c.width} ${c.height}`);
+    const sx = a.left - c.left + a.width / 2, sy = a.top - c.top + a.height / 2;
+    const ex = b.left - c.left + b.width / 2, ey = b.top - c.top + b.height / 2;
+    const d = `M ${sx},${sy} Q ${(sx + ex) / 2},${sy - curvature} ${ex},${ey}`;
+    svg.querySelectorAll("path").forEach((p) => p.setAttribute("d", d));
+  };
+  new ResizeObserver(update).observe(container);
+  update();
+  return svg;
+}
+
 /** Shimmer Button: adds Magic UI's spark, backdrop and highlight layers to a button. */
 export function shimmer(btn) {
   if (!btn || btn.classList.contains("shimmer")) return;
