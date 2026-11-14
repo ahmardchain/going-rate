@@ -1,14 +1,34 @@
 # Going Rate
 
+**Built with: SERV Reasoning by OpenServ (inference API, `gpt-6-luna`) + Kite Passport (`kpass` sessions, passkey approvals, x402 payments).**
+SERV Hackathon 02 · **Kite track**
+
 **An agent should know the price of a job before it asks you to pay.**
 
 Going Rate is a rate card for Kite Passport spending sessions. Before you tap your passkey, it tells you (and the agent) what people usually approve for that kind of task, so the agent asks for the right caps the first time. You approve once, and the run doesn't stop halfway for a second approval.
 
 It's the going rate of the task, not an agent exam grade (Imprimatur), not one cart's total (PurseStrings).
 
-Built for **SERV Hackathon 02, Kite track**.
+**[Live demo](https://going-rate.ahmardchain.workers.dev/)** (no account needed) · **[Contrast demo](https://going-rate.ahmardchain.workers.dev/contrast)** · **[Ledger of real Kite payments](https://going-rate.ahmardchain.workers.dev/ledger)** · **[Demo video (70s)](https://x.com/Ahmardchain/status/2121415151375282467/video/1)** · [X post](https://x.com/Ahmardchain/status/2121415151375282467)
 
-**[Live demo](https://going-rate.ahmardchain.workers.dev/)** · **[Contrast demo](https://going-rate.ahmardchain.workers.dev/contrast)** · **[Ledger of real Kite payments](https://going-rate.ahmardchain.workers.dev/ledger)** · **[Demo video (70s)](docs/going-rate-demo.mp4)** · [X post](https://x.com/Ahmardchain/status/2121415151375282467)
+## Judges' checklist
+
+| Requirement | ✓ | Where to check |
+|---|---|---|
+| **Uses SERV Reasoning** | ✓ | Two OpenServ inference calls per approval card: classify the task, then explain the card. Both SERV request IDs are shown on every card. Code: [`src/core/serv.js`](src/core/serv.js). Try it: [live demo](https://going-rate.ahmardchain.workers.dev/) → "Show approval card" |
+| **Kite track: built on Kite Passport** | ✓ | `kpass session create --separate`, passkey approval, `kpass session status`, `kpass session execute`, `kpass activity` · [`src/kpass.js`](src/kpass.js) |
+| **Real Kite payments, not mocks** | ✓ | [Ledger](https://going-rate.ahmardchain.workers.dev/ledger): paid calls across 5 task types through Kite Passport's production backend, settled in USDC on Base, each with a Basescan transaction link |
+| **Public repo** | ✓ | This repo, MIT licensed |
+| **Demo** | ✓ | [Live demo](https://going-rate.ahmardchain.workers.dev/) with no account needed · [Contrast](https://going-rate.ahmardchain.workers.dev/contrast) · [video](https://x.com/Ahmardchain/status/2121415151375282467/video/1) |
+| **Short write-up** | ✓ | [`docs/SUBMISSION.md`](docs/SUBMISSION.md) |
+| **Shared on X** | ✓ | [X post](https://x.com/Ahmardchain/status/2121415151375282467) |
+| **Built during the hackathon** | ✓ | New project: all commits are dated 12–14 Nov 2026 (`git log`) |
+
+| Judging criterion | Our answer |
+|---|---|
+| **Creativity** | A going rate for agent spending: SERV turns free-text tasks into stable categories, then code prices them from real approvals. It improves the first ask instead of adding another limiter |
+| **User readiness** | Live on Cloudflare, usable without an account; an [agent API](#for-agent-builders-the-api) and CLI; 26 tests; tested against the real `kpass` 6.13.2 |
+| **Revenue potential** | Paid going-rate lookups per session ask (an x402 listing in Kite's catalog), pooled benchmarks, first-ask analytics. See [Revenue](#revenue) |
 
 <p align="center"><img src="docs/img/approval-card.png" alt="Going Rate approval card: an agent asks for $100 to generate thumbnails; the going rate is $5.89, so the card shows HIGH, 17x, with a suggested ask of $6.59" width="420"></p>
 

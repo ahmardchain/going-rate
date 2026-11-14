@@ -1,6 +1,14 @@
 # Going Rate: SERV Hackathon 02 submission
 
+**Built with: SERV Reasoning by OpenServ (inference API, `gpt-6-luna`) + Kite Passport (`kpass` sessions, passkey approvals, x402 payments).**
+
 **Track:** Kite
+
+**Checklist:**
+- ✓ **SERV Reasoning:** two calls per card (classify + explain), with request IDs shown on every card
+- ✓ **Kite Passport:** real sessions, passkey approvals and payments ([ledger](https://going-rate.ahmardchain.workers.dev/ledger))
+- ✓ **Public repo**, ✓ **live demo** (no account needed), ✓ **video**, ✓ **X post**
+- ✓ **Built 12–14 Nov 2026**: a new project, every commit dated within the hackathon
 **Repo:** https://github.com/ahmardchain/going-rate
 **Live demo:** https://going-rate.ahmardchain.workers.dev/ · [Contrast](https://going-rate.ahmardchain.workers.dev/contrast) · [Ledger](https://going-rate.ahmardchain.workers.dev/ledger)
 **Demo video:** https://x.com/Ahmardchain/status/2121415151375282467/video/1 (also in the repo: docs/going-rate-demo.mp4)
