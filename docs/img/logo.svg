@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1f5a43"/>
+      <stop offset="1" stop-color="#0d1f18"/>
+    </linearGradient>
+    <linearGradient id="line" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#34d399"/>
+      <stop offset="1" stop-color="#a7f3d0"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <!-- baseline: the going rate -->
+  <path d="M112 360 H400" stroke="#84e1b8" stroke-opacity=".35" stroke-width="20" stroke-linecap="round" stroke-dasharray="2 34"/>
+  <!-- the rate line -->
+  <path d="M120 312 L208 216 L280 268 L392 144" fill="none" stroke="url(#line)" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="392" cy="144" r="30" fill="#ecfdf5"/>
+</svg>
