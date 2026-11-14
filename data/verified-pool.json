@@ -1,6 +1,6 @@
 {
  "note": "Real session decisions confirmed through Kite Passport (kpass session status / kpass user sessions). Not seeded.",
- "updated_at": "2026-11-14T00:25:17.786Z",
+ "updated_at": "2026-11-14T00:39:47.054Z",
  "records": [
   {
    "id": "0bc9bed3-300a-463a-8eac-f5f875b893c9",
@@ -117,6 +117,34 @@
    "kite_verified": true,
    "kite_request_id": "agent_session_req_01a1d761-201a-7679-a33d-47a590c85f5c",
    "at": "2026-11-14T00:11:55.769Z"
+  },
+  {
+   "id": "ee502dc9-bcfc-4204-add9-f5ed0bd5e274",
+   "task_type": "video-generation",
+   "task_summary": "Generate a 5-second 720p product teaser video of a steel water bottle",
+   "per_tx_usd": 1,
+   "total_usd": 5,
+   "ttl_hours": 1,
+   "outcome": "approved",
+   "source": "kpass-session",
+   "seeded": false,
+   "kite_verified": true,
+   "kite_request_id": "agent_session_req_01a1d77d-070f-78f2-9b12-a76c47576874",
+   "at": "2026-11-14T00:37:56.122Z"
+  },
+  {
+   "id": "b72e5035-3e34-4a29-af1b-8795a312935e",
+   "task_type": "video-generation",
+   "task_summary": "Generate a 5-second 720p product teaser video of a steel water bottle",
+   "per_tx_usd": 3.2,
+   "total_usd": 23.97,
+   "ttl_hours": 6,
+   "outcome": "approved",
+   "source": "kpass-session",
+   "seeded": false,
+   "kite_verified": true,
+   "kite_request_id": "agent_session_req_01a1d77d-7056-793f-aea3-a8557b034e69",
+   "at": "2026-11-14T00:39:02.772Z"
   }
  ]
 }

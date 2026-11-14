@@ -19,7 +19,7 @@ When an agent needs to pay for something, it asks for a Kite session (`kpass ses
 - **Too low:** Kite does exactly what it should and refuses the payment: `session_rule_exceeded` if one call costs more than the per-payment cap, `session_total_exceeded` when the run outgrows the total. The agent stops and asks you again. That's a second passkey prompt, in the middle of the job.
 - **Too high:** you approve far more than the task needs, or you reject it and the agent asks again.
 
-Kite's own docs example uses $1 per payment and $5 total. That's fine for a weather lookup. A 5-second 720p video is quoted at $1.33 by its merchant, so a $1 per-payment cap can't pay for it. The [contrast demo](https://going-rate.ahmardchain.workers.dev/contrast) runs that exact case on real Kite sessions _(real run pending; the page shows "not recorded yet" until it happens)_.
+Kite's own docs example uses $1 per payment and $5 total. That's fine for a weather lookup. A 5-second 720p video is quoted at $1.33 by its merchant, so a $1 per-payment cap can't pay for it. The [contrast demo](https://going-rate.ahmardchain.workers.dev/contrast) ran that exact case on real Kite sessions on 14 Nov 2026: with the docs-example caps, Kite refused the first payment with `session_rule_exceeded`. With Going Rate's caps, the first passkey approval was enough and the video was paid on the first call.
 
 Kite already records every approval and payment (`kpass activity`, `kpass user sessions`), but nothing turns that history into a better first ask. Going Rate does.
 
@@ -80,9 +80,35 @@ Three things we learned from the live CLI:
 
 ## Proof
 
-- **[Ledger](https://going-rate.ahmardchain.workers.dev/ledger):** every real Kite Passport payment Going Rate made, read from `kpass activity --kind x402_payment`, with the task type, the catalog's listed price against what Kite charged, the transaction link and the time. It also lists every Kite-verified session decision (passkey approvals and rejections).
-- **[Contrast demo](https://going-rate.ahmardchain.workers.dev/contrast):** one real job asked twice on Kite, with the docs-example caps and with Going Rate's caps. Each column shows the card, the passkey decision and what happened to the first paid call. _(Real run pending.)_
+- **[Ledger](https://going-rate.ahmardchain.workers.dev/ledger):** every real Kite Passport payment Going Rate made, read from `kpass activity --kind x402_payment`. Each row has the task type, the catalog's listed price against what Kite charged, the Basescan transaction and the time. It also lists every Kite-verified session decision. On 14 Nov 2026, real paid calls covered 5 task types:
+
+  | Task type | Service | Listed | Charged |
+  |---|---|---|---|
+  | Data API lookups | Exa search | $0.007 | $0.007 |
+  | LLM inference | GEDX402 Chat | $0.005 | $0.002 |
+  | Image generation | StableStudio Nano Banana | $0.039 | $0.07 |
+  | Web scraping | Exa contents | $0.001 | $0.001 |
+  | Video generation | x402 Video Gateway (Seedance, 5s 720p) | $0.98 | $1.33 |
+
+  Listed prices aren't what a job costs: the video cost 36% more than listed, and the image nearly 80% more. That's why Going Rate learns from what people approve and what Kite charges, not from catalog prices alone.
+- **[Contrast demo](https://going-rate.ahmardchain.workers.dev/contrast):** one real job asked twice on Kite: a 5-second 720p video, quoted at $1.33.
+
+  | | Docs-example caps | Going Rate's caps |
+  |---|---|---|
+  | Caps | $1 per payment, $5 total, 1h | $3.20 per payment, $23.97 total, 6h |
+  | Card | **LOW** | **IN LINE** |
+  | Passkey | approved | approved |
+  | First paid call | **refused: `session_rule_exceeded`** | **paid, $1.33** |
+
+  With the docs-example caps, the agent would have to stop and ask you again. Both columns show SERV's sentence, the text Kite's approval screen showed, and the Kite request IDs.
+
+  <img src="docs/img/contrast.png" alt="Contrast demo: docs-example caps refused with session_rule_exceeded; Going Rate's caps paid $1.33 on the first approval" width="760">
+- **Going rate on Kite's approval screen:** each session's `--task-summary` carried the going rate, for example "… \| Going rate (image generation, 11 approvals): $5.89 total, $0.53/payment, 2h. This ask: $6.56, $0.56/payment, 2h - IN LINE".
 - **Live run, 12 Nov 2026:** a $100 / $25-per-payment ask for image generation got a HIGH card and was rejected with a passkey. A similar task asked at the going rate got IN LINE and was approved. Both decisions are on the ledger.
+- **What went wrong, honestly:**
+  - Two merchants (fal.ai and Firecrawl) settle over MPP on Tempo, which Kite Passport couldn't pay ("unsupported merchant asset/network combination"). Both were refused before payment and replaced with Base x402 merchants.
+  - One $0.01 weather payment is still `payment_outcome_pending` on Kite's side. It's shown as not settled and isn't counted.
+  - One session was classified "Other" by an earlier version that classified twice per ask; that bug is fixed.
 
 ## Built during the hackathon (12–15 Nov 2026)
 
@@ -92,7 +118,7 @@ Going Rate is a new project; all of it was built for SERV Hackathon 02:
 - the Kite integration: `ask`, `record`, `sync`, `pay`, `quote`, `ledger` and `contrast` over the live `kpass` and `ksearch` CLIs
 - the going rate inside Kite's `--task-summary`
 - the Cloudflare Worker, the approval-card demo, the ledger and the contrast page
-- 25 tests, including fixtures built from real `kpass` output
+- 26 tests, including fixtures built from real `kpass` output
 
 ## What's real and what's seeded
 
@@ -142,7 +168,7 @@ Needs Node 22 or newer. The app has no runtime dependencies; `npm install` only 
 
 ```bash
 npm install
-npm test                          # 25 tests
+npm test                          # 26 tests
 ```
 
 ```bash
@@ -196,7 +222,7 @@ src/catalog.js        ksearch listed prices and free 402 quotes
 src/cli.js            going-rate check | ask | pay | quote | contrast | ledger | sync | record
 public/               approval card, /contrast, /ledger, ledger.json, contrast.json
 data/                 seeded pool, Kite-verified decisions, payment notes
-test/                 25 tests
+test/                 26 tests
 docs/                 submission write-up, video script, screenshot
 ```
 

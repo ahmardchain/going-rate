@@ -64,6 +64,7 @@ export function ledgerRows(events, notes = []) {
       merchant_host: first(x.merchant_host, t.merchant_host),
       request_url: requestUrl,
       listed_usd: note?.listed_usd ?? null,
+      quoted_usd: note?.quoted_usd ?? null,
       charged_usd: charged,
       routing_overhead_usd: rt.routing_overhead_usd_micros != null ? Number(rt.routing_overhead_usd_micros) / 1e6 : null,
       chain,

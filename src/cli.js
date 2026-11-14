@@ -246,8 +246,10 @@ async function main() {
         await call("/api/outcome", { check_id: check.check_id, outcome: "approved", kite_request_id: s.requestId }, { authorization: "Bearer local-cli" });
         const res = await kp.executePaid({ sessionId: d.sessionId, url, method, body, idempotencyKey: `going-rate-contrast-${phase}-${s.requestId}` });
         Object.assign(entry, { paid: res.ok, kite_error: res.code ?? null, kite_message: res.ok ? null : res.message, response: res.ok ? short(res.raw, 800) : null, paid_at: new Date().toISOString() });
-        appendFileSync(PAYMENT_NOTES, JSON.stringify({ at: entry.paid_at, task_summary, task_type: check.classification.task_type, service: opt("service") ?? new URL(url).host,
-          listed_usd: price, request_url: url, method, session_id: d.sessionId, ok: res.ok, code: res.code ?? null }) + "\n");
+        // listed_usd is the catalog's price; quoted_usd is the merchant's 402 quote for this exact call.
+        const listed = await listedPrice(url).catch(() => null);
+        appendFileSync(PAYMENT_NOTES, JSON.stringify({ at: entry.paid_at, task_summary, task_type: check.classification.task_type, service: listed?.service ?? opt("service") ?? new URL(url).host,
+          listed_usd: listed?.listed_usd ?? null, quoted_usd: price, request_url: url, method, session_id: d.sessionId, ok: res.ok, code: res.code ?? null }) + "\n");
         console.log(res.ok ? `First paid call succeeded.` : `First paid call refused by Kite: ${res.code ?? res.message}`);
       }
       result.phases.push(entry);

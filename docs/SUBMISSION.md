@@ -2,46 +2,56 @@
 
 **Track:** Kite
 **Repo:** https://github.com/ahmardchain/going-rate
-**Live demo:** https://going-rate.ahmardchain.workers.dev/
+**Live demo:** https://going-rate.ahmardchain.workers.dev/ · [Contrast](https://going-rate.ahmardchain.workers.dev/contrast) · [Ledger](https://going-rate.ahmardchain.workers.dev/ledger)
 **Demo video:** _add link_
 **X post:** _add link_
 
 ## What it does
 
-Going Rate is a rate card for Kite Passport spending sessions. When an agent asks for a session (`kpass session create`), Going Rate shows a card before the passkey: the caps the agent requested next to what people usually approve for that kind of task, with a cue of in line, high or low and suggested caps.
+An agent should know the price of a job before it asks you to pay.
 
-The point is a better first ask. An over-ask is either approved for far more than the task needs or rejected and asked again. An under-ask runs into `session_total_exceeded` partway through the run and has to stop for a second approval. With the going rate, the agent asks for the right caps once and the user taps the passkey once. Going Rate never blocks a spend.
+When an agent asks for a Kite Passport spending session, Going Rate shows the going rate for that kind of task (what people usually approve) before the passkey, so the agent asks for the right caps the first time. Today caps are guesses. Too low, and Kite refuses a payment mid-run (`session_rule_exceeded` / `session_total_exceeded`) and the user gets a second approval. Too high, and the user over-approves or rejects.
 
-After the passkey, `kpass session status` reports the decision. Going Rate records it, and the rate updates.
+Proof, on Kite's production backend (14 Nov 2026):
+- **Contrast:** the same 5-second video job (merchant quote $1.33), asked twice:
+  - With Kite's docs-example caps ($1 / $5), the first payment was refused with `session_rule_exceeded`.
+  - With Going Rate's caps ($3.20 / $23.97, IN LINE), the first passkey approval was enough and the video was paid on the first call.
+- **Ledger:** real paid calls across 5 task types (data lookup, LLM, image, scraping, video), each with listed vs charged price and a Basescan transaction. Listed prices understated real cost by up to 80%.
+
+It's the going rate of the task, not an agent exam grade (Imprimatur), not one cart's total (PurseStrings).
 
 ## How SERV Reasoning is used
 
-SERV classifies each session's task summary (plus the merchant host, when known) into one of 8 fixed task types, which become the rate card's buckets.
+Every card makes two calls to the OpenServ inference API (`gpt-6-luna`), and both request IDs are shown on the card:
+1. **Classify:** a constant system prompt, which SERV compiles into a cached flowchart, plus strict JSON with an 8-type enum. The task summary and merchant host go in the user message. The stable categories are what make a going rate possible.
+2. **Explain:** code computes the rate, the cue and the suggested caps; SERV writes one sentence for the person approving, and code checks that every number in it came from code. Otherwise a template is shown, labelled as such.
 
-- The system prompt is a single constant. SERV compiles it into a reasoning flowchart, cached per organization for 30 days and keyed on the exact prompt, so every classification reuses the same flowchart. "Generate 20 product thumbnails" and "Make 15 blog header images" both land in image-generation.
-- The output is strict JSON with an enum of the task ids, so SERV can't invent a category.
-- `serv_prompt_guard` is on, because task summaries are written by agents and are untrusted. A summary that tries to steer the classifier is refused and can't feed the rate card.
-- SERV never sees or produces amounts. Medians, percentiles, cap comparisons and dates are plain code, because model replays aren't fully deterministic.
-- Model: `gpt-6-luna`.
+`serv_prompt_guard` is on for both calls, because agent-written summaries are untrusted. SERV never does arithmetic.
 
 ## Why it's Kite
 
-It uses only Passport features that are live today, tested against `kpass` 6.13.2 on the production backend:
+It's built only on Passport features that are live today:
+- `kpass agent:register`
+- `kpass session create --separate`, with the going rate in `--task-summary` so it appears on Kite's approval screen
+- the passkey approval, then `kpass session status`
+- `kpass session execute` for real x402 payments
+- `kpass activity` and `kpass user sessions` as the ledger and history
+- `ksearch` for listed prices
 
-- an agent registered with `kpass agent:register`
-- sessions via `kpass session create --separate`, a passkey approval, and `kpass session status`
-- history via `kpass activity --kind session_approval` joined with `kpass user sessions`
+No DIDs, VCs, escrow, streaming or conditional payments.
 
-It doesn't use DIDs, VCs, escrow, streaming or conditional payments.
+## Built during the hackathon
 
-**Live run:** on a real Passport account, a $100 / $25-per-payment / 24h ask for image generation got a HIGH card (17.7x the usual total) and was rejected with the passkey. A similar task, asked at the going rate ($6.53 / $0.56 / 2h), got an IN LINE card and was approved. Both decisions were recorded as Kite-verified outcomes.
+All of it, 12–15 Nov 2026: the rate engine, the SERV classifier and explainer, the Kite CLI integration (`ask`, `run`, `pay`, `quote`, `contrast`, `ledger`, `sync`, `record`), the Cloudflare Worker, the approval card, the contrast and ledger pages, and 26 tests.
 
 ## Honest notes
 
-- The starting pool is 93 seeded records, all labelled `seeded: true`, and the card always says how many of its approvals are seeded. Real approvals come from `going-rate sync` and from decisions recorded by `going-rate ask`.
-- `kpass activity` only covers one account, so no shared pool of real approvals exists yet. Going Rate starts one: verified outcomes can be sent to the hosted pool with an ingest token.
-- The passkey on the hosted demo page is simulated, and the page says so. The CLI makes the real Kite calls.
+- The starting pool is 93 seeded records, all labelled `seeded: true`. The card says how many of its approvals are seeded, and the Kite-verified decisions are listed on the ledger.
+- The passkey on the main demo page is simulated. The contrast and ledger pages are real Kite runs.
+- Two Tempo/MPP merchants couldn't be paid by Kite and were replaced. One $0.01 payment is still pending on Kite's side and isn't counted.
 
 ## Revenue
 
-A paid going-rate lookup per session ask (an x402 service) for agent builders and wallets, pooled benchmarks that improve as verified approvals come in (contributors get free lookups), and approval-rate analytics for agent marketplaces.
+- **Going-rate lookups as a paid service** for agent frameworks and wallets, called before each session ask. The natural channel is an x402 listing in Kite's own catalog. This is planned.
+- **Data that compounds** with every verified approval and payment.
+- **First-ask analytics** for agent marketplaces.

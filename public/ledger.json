@@ -1,7 +1,25 @@
 {
- "generated_at": "2026-11-14T00:25:17.784Z",
+ "generated_at": "2026-11-14T00:39:47.053Z",
  "source": "kpass activity --kind x402_payment",
  "rows": [
+  {
+   "at": "2026-11-14T00:39:05.520787Z",
+   "status": "completed",
+   "task_type": "video-generation",
+   "task_summary": "Generate a 5-second 720p product teaser video of a steel water bottle",
+   "service": "x402 Video Gateway",
+   "merchant_host": "api.x402video.com",
+   "request_url": "https://api.x402video.com/generate/seedance/custom",
+   "listed_usd": 0.98,
+   "quoted_usd": 1.33,
+   "charged_usd": 1.33,
+   "routing_overhead_usd": 0,
+   "chain": "base",
+   "tx_hash": "0x69291749e0821e3a8e68895849b29d97e86341d883c4a190ce89b69ce55de4f2",
+   "tx_url": "https://basescan.org/tx/0x69291749e0821e3a8e68895849b29d97e86341d883c4a190ce89b69ce55de4f2",
+   "session_id": "agent_session_01a1d77e-4fae-7b76-a6ae-d8cae726c046",
+   "activity_id": "act-routing-pa-26d99ff1cdf4fdfade4d7e4af40039e85d75dae1e29fe7cb55d365a41608d0ef"
+  },
   {
    "at": "2026-11-14T00:14:16.824797Z",
    "status": "completed",
@@ -11,6 +29,7 @@
    "merchant_host": "api.exa.ai",
    "request_url": "https://api.exa.ai/contents",
    "listed_usd": 0.001,
+   "quoted_usd": null,
    "charged_usd": 0.001,
    "routing_overhead_usd": 0,
    "chain": "base",
@@ -28,6 +47,7 @@
    "merchant_host": "stablestudio.dev",
    "request_url": "https://stablestudio.dev/api/generate/nano-banana/generate",
    "listed_usd": 0.039,
+   "quoted_usd": null,
    "charged_usd": 0.07,
    "routing_overhead_usd": 0,
    "chain": "base",
@@ -45,6 +65,7 @@
    "merchant_host": "chat.gedx402.com",
    "request_url": "https://chat.gedx402.com/v1/chat/completions",
    "listed_usd": 0.005,
+   "quoted_usd": null,
    "charged_usd": 0.002,
    "routing_overhead_usd": 0,
    "chain": "base",
@@ -62,6 +83,7 @@
    "merchant_host": "api.exa.ai",
    "request_url": "https://api.exa.ai/search",
    "listed_usd": 0.007,
+   "quoted_usd": null,
    "charged_usd": 0.007,
    "routing_overhead_usd": 0,
    "chain": "base",
@@ -79,6 +101,7 @@
    "merchant_host": "weather.hugen.tokyo",
    "request_url": "https://weather.hugen.tokyo/weather/current?city=Lisbon",
    "listed_usd": 0.01,
+   "quoted_usd": null,
    "charged_usd": 0.01,
    "routing_overhead_usd": 0,
    "chain": "base",
@@ -96,6 +119,7 @@
    "merchant_host": "kite-services.kiteai.dev",
    "request_url": "https://kite-services.kiteai.dev/v1/image/edits",
    "listed_usd": null,
+   "quoted_usd": null,
    "charged_usd": 0,
    "routing_overhead_usd": null,
    "chain": "kite",
@@ -107,6 +131,13 @@
   }
  ],
  "by_type": {
+  "video-generation": {
+   "calls": 1,
+   "charged_min": 1.33,
+   "charged_median": 1.33,
+   "charged_max": 1.33,
+   "last_paid_at": "2026-11-14T00:39:05.520787Z"
+  },
   "web-scraping": {
    "calls": 1,
    "charged_min": 0.001,

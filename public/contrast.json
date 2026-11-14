@@ -1,0 +1,70 @@
+{
+ "task_summary": "Generate a 5-second 720p product teaser video of a steel water bottle",
+ "url": "https://api.x402video.com/generate/seedance/custom",
+ "quoted_price_usd": 1.33,
+ "phases": [
+  {
+   "phase": "docs_default",
+   "caps": {
+    "per_tx_usd": 1,
+    "total_usd": 5,
+    "ttl_hours": 1
+   },
+   "kite_task_summary": "Generate a 5-second 720p product teaser video of a steel water bottle",
+   "cue": "low",
+   "explanation": {
+    "text": "The $5.00 request is below what video generation usually needs compared with the $21.55 going rate, and may require another approval.",
+    "source": "serv",
+    "requestId": "9394a4cb-3e6f-4133-ae7d-703c13397d1e",
+    "model": "gpt-6-luna",
+    "ms": 6535
+   },
+   "serv": {
+    "model": "gpt-6-luna",
+    "classify_request_id": "0b0576e0-dff0-44d0-ba31-a4113864b6e4",
+    "explain_request_id": "9394a4cb-3e6f-4133-ae7d-703c13397d1e"
+   },
+   "kite_request_id": "agent_session_req_01a1d77d-070f-78f2-9b12-a76c47576874",
+   "decision": "approved",
+   "session_id": "agent_session_01a1d77d-47a8-74ae-a7e9-10df9227346c",
+   "at": "2026-11-14T00:37:56.121Z",
+   "paid": false,
+   "kite_error": "session_rule_exceeded",
+   "kite_message": "kpass session execute failed: payment amount exceeds max_amount_per_tx",
+   "response": null,
+   "paid_at": "2026-11-14T00:37:57.076Z"
+  },
+  {
+   "phase": "going_rate",
+   "caps": {
+    "per_tx_usd": 3.2,
+    "total_usd": 23.97,
+    "ttl_hours": 6
+   },
+   "kite_task_summary": "Generate a 5-second 720p product teaser video of a steel water bottle | Going rate (video generation, 9 approvals): $19.99 total, $2.77/payment, 6h. This ask: $23.97, $3.20/payment, 6h - IN LINE",
+   "cue": "in_line",
+   "explanation": {
+    "text": "The Video generation request fits the usual range, and the agent asked at the going rate.",
+    "source": "serv",
+    "requestId": "687ad273-30fb-42e6-96b5-f53e0b2e0436",
+    "model": "gpt-6-luna",
+    "ms": 3991
+   },
+   "serv": {
+    "model": "gpt-6-luna",
+    "classify_request_id": "fdf645cb-7fca-40ac-af92-d7a9105050fd",
+    "explain_request_id": "687ad273-30fb-42e6-96b5-f53e0b2e0436"
+   },
+   "kite_request_id": "agent_session_req_01a1d77d-7056-793f-aea3-a8557b034e69",
+   "decision": "approved",
+   "session_id": "agent_session_01a1d77e-4fae-7b76-a6ae-d8cae726c046",
+   "at": "2026-11-14T00:39:02.771Z",
+   "paid": true,
+   "kite_error": null,
+   "kite_message": null,
+   "response": "{\"_version\":\"1\",\"allowance_id\":\"\",\"delegation\":{\"payment_policy\":{\"currency\":\"USD\",\"max_amount_per_tx\":\"3.2\",\"max_total_amount\":\"23.97\"},\"task\":{\"summary\":\"Generate a 5-second 720p product teaser video of a steel water bottle | Going rate (video generation, 9 approvals): $19.99 total, $2.77/payment, 6h. This ask: $23.97, $3.20/payment, 6h - IN LINE\"}},\"hint\":\"x402 request to https://api.x402video.com/generate/seedance/custom completed with HTTP 200.\",\"next_command\":\"\",\"payment\":{\"amount\":\"1330000\",\"asset\":\"0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913\",\"network\":\"eip155:8453\",\"protocol\":\"x402\",\"response_body\":\"\",\"status_code\":200,\"transaction_hash\":\"0x69291749e0821e3a8e68895849b29d97e86341d883c4a190ce89b69ce55de4f2\"},\"payment_requirement\":{\"amount\":\"1.33\",\"amount_onchain\":\"1330000\",\"asset\":\"U…",
+   "paid_at": "2026-11-14T00:39:05.569Z"
+  }
+ ],
+ "generated_at": "2026-11-14T00:39:05.569Z"
+}
