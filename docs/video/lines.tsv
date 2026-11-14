@@ -1,0 +1,7 @@
+01-title	An agent should know the price of a job before it asks you to pay. This is Going Rate, for Kite Passport.
+02-refused	Here's a real job: a five-second product video. The agent asks Kite with the caps from the docs example: one dollar a payment. But the video costs a dollar thirty-three. So Kite refuses the first payment, and the agent has to stop and ask you again.
+03-serv	Going Rate checks before the agent asks. Serv Reasoning classifies the job as video generation, and explains the card in one sentence. Plain code computes the going rate: video jobs usually get about three dollars a payment. So this ask is low.
+04-kite	The going rate goes into Kite's task summary, so you see it on Kite's own approval screen, right where you tap your passkey.
+05-paid	Same job, with Going Rate's caps. One passkey approval, and the first paid call goes through. Here's the transaction, on Base.
+06-ledger	Every real payment is on the ledger: five task types, with the listed price next to what Kite actually charged. Listed prices were off by up to eighty percent.
+07-close	Going Rate. The going rate of the task, so you approve once.
