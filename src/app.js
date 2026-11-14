@@ -87,13 +87,26 @@ export async function handle(request, env, store) {
 
     // The approval card: requested caps vs the going rate for this task type.
     if (url.pathname === "/api/check" && request.method === "POST") {
-      const ask = {
+      // With at_going_rate: true, the ask is the suggestion for the same classification,
+      // so one SERV classification drives both the suggested caps and the card.
+      const atRate = body.at_going_rate === true;
+      const ask = atRate ? null : {
         per_tx_usd: num(body.per_tx_usd, "per_tx_usd", 10_000),
         total_usd: num(body.total_usd, "total_usd", 100_000),
         ttl_hours: num(body.ttl_hours, "ttl_hours", 24 * 30),
       };
-      if (ask.per_tx_usd > ask.total_usd) throw new RangeError("per_tx_usd can't exceed total_usd");
+      if (ask && ask.per_tx_usd > ask.total_usd) throw new RangeError("per_tx_usd can't exceed total_usd");
       const { task_summary, payment_context, classification } = await classifyOrFail(body, env);
+      if (atRate && classification.ok) {
+        const sug = suggestedCaps(goingRate(await pool(store, sid), classification.task_type));
+        if (!sug) return json({ task_summary, classification, card: null, error: "no going rate for this task type yet" });
+        return handleCard({ task_summary, payment_context, classification, ask: sug });
+      }
+      if (atRate) return json({ task_summary, classification, card: null });
+      return handleCard({ task_summary, payment_context, classification, ask });
+    }
+
+    async function handleCard({ task_summary, payment_context, classification, ask }) {
       const check_id = crypto.randomUUID();
       const check = { check_id, task_summary, payment_context, ask, classification, at: new Date().toISOString() };
       if (!classification.ok) {

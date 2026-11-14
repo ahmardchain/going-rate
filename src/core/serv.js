@@ -94,8 +94,13 @@ export async function classify({ taskSummary, paymentContext }, { apiKey, fetchI
 // the numbers it was given; if not, the sentence is replaced by a template.
 
 export const EXPLAINER_SYSTEM = `You write one sentence for a person about to approve an AI agent's spending session with their passkey.
-You are given facts as JSON: the task type, the caps the agent asked for, the going rate (what people usually approve for this task type), the suggested caps, and a cue (in_line, high or low).
-Write exactly one plain sentence, at most 35 words, that tells the person whether the ask fits the going rate and why the suggested caps make sense.
+You are given facts as JSON: the task type, the caps the agent asked for, the going rate (the median of what people approve for this task type), the suggested caps, a cue, and whether the agent asked at exactly the suggested caps.
+The cue is already decided and you must not contradict it:
+- in_line: the ask is within the usual range for this task type. Say it fits. Never call it too high or too low.
+- high: the ask is well above what people usually approve.
+- low: the ask is below what this task type usually needs, so the run may stop for a second approval.
+If asked_at_suggested_caps is true, say the agent asked at the going rate.
+Write exactly one plain sentence, at most 30 words, that tells the person whether the ask fits and why.
 Rules:
 - Use only numbers that appear in the facts, written exactly as given. Never calculate, round or invent a number.
 - No advice to reject or approve; just explain.
@@ -112,9 +117,11 @@ const money = (v) => `$${Number(v).toFixed(2)}`;
 
 /** The facts SERV may use, with every number already formatted by code. */
 export function explanationFacts({ label, ask, rate, suggestion, cue, n }) {
+  const atSuggestion = Boolean(suggestion) && ask.per_tx_usd === suggestion.per_tx_usd && ask.total_usd === suggestion.total_usd;
   return {
     task_type: label,
     cue,
+    asked_at_suggested_caps: atSuggestion,
     approvals_behind_rate: String(n),
     agent_asks: { per_payment: money(ask.per_tx_usd), total: money(ask.total_usd), duration: `${Math.round(ask.ttl_hours)}h` },
     going_rate: { per_payment: money(rate.per_tx_usd), total: money(rate.total_usd), duration: `${Math.round(rate.ttl_hours)}h` },
@@ -136,6 +143,7 @@ export function onlyGivenNumbers(sentence, facts) {
 export function templateSentence(f) {
   if (f.cue === "high") return `This asks for ${f.agent_asks.total} where ${f.task_type.toLowerCase()} tasks usually get ${f.going_rate.total}; ${f.suggested.total} total at ${f.suggested.per_payment} per payment covers a typical run.`;
   if (f.cue === "low") return `This asks for ${f.agent_asks.total}, below the usual ${f.going_rate.total} for ${f.task_type.toLowerCase()}, so the run would likely stop for a second approval; ${f.suggested.total} total avoids that.`;
+  if (f.asked_at_suggested_caps) return `The agent asked at the going rate for ${f.task_type.toLowerCase()}: ${f.agent_asks.total} total and ${f.agent_asks.per_payment} per payment fit what people usually approve.`;
   return `This ask is in line with what people usually approve for ${f.task_type.toLowerCase()} (${f.going_rate.total} total, ${f.going_rate.per_payment} per payment).`;
 }
 

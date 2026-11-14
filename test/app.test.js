@@ -73,6 +73,15 @@ test("prompt guard block in structured-output shape (content null, message.refus
   assert.equal(check.card, null);
 });
 
+test("at_going_rate: one classification drives both the suggested caps and the card", async () => {
+  const sent = [];
+  const out = await (await handle(post("/api/check", { task_summary: "Make 15 blog header images", at_going_rate: true }), { SERV_API_KEY: "k", fetchImpl: stubServ("image-generation", sent) }, memStore())).json();
+  assert.equal(out.card.overall, "in_line");
+  assert.deepEqual(out.ask, out.card.suggestion);
+  assert.equal(sent.filter((b) => b.messages[0].content === CLASSIFIER_SYSTEM).length, 1);
+  assert.match(out.card.kite_task_summary, /IN LINE$/);
+});
+
 test("validation: per-payment cap above total is rejected", async () => {
   const res = await handle(post("/api/check", { ...wild, per_tx_usd: 200 }), { fetchImpl: stubServ("other") }, memStore());
   assert.equal(res.status, 400);

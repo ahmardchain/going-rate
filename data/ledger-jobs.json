@@ -1,0 +1,7 @@
+[
+  { "summary": "Get the current weather in Lisbon for a delivery route plan", "method": "GET", "url": "https://weather.hugen.tokyo/weather/current?city=Lisbon" },
+  { "summary": "Search the web for the best insulated water bottles of 2026", "url": "https://api.exa.ai/search", "body": { "query": "best insulated water bottles 2026", "numResults": 3 } },
+  { "summary": "Write a one-line product tagline for a steel water bottle with an LLM", "url": "https://chat.gedx402.com/v1/chat/completions", "body": { "messages": [{ "role": "user", "content": "Write a one-line product tagline for a steel water bottle." }], "max_tokens": 40 } },
+  { "summary": "Generate a product image of a steel water bottle on a white table", "url": "https://fal.mpp.tempo.xyz/fal-ai/flux/schnell", "body": { "prompt": "a steel water bottle on a white studio table, soft light, product photo" } },
+  { "summary": "Scrape the example.com landing page for a competitor check", "url": "https://firecrawl.mpp.tempo.xyz/v1/scrape", "body": { "url": "https://example.com" } }
+]

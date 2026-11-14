@@ -77,10 +77,8 @@ async function askBody() {
   if (opt("total")) {
     return { task_summary, payment_context, per_tx_usd: Number(opt("per-tx") ?? opt("total")), total_usd: Number(opt("total")), ttl_hours: kp.parseTtlHours(opt("ttl") ?? "1h") };
   }
-  const sug = await call("/api/suggest", { task_summary, payment_context });
-  if (!sug.suggestion) throw new Error(`No going rate for this task (${sug.classification.error ?? "too few approvals"}). Pass --per-tx/--total/--ttl.`);
-  console.log(`Asking at the going rate for ${sug.label}.`);
-  return { task_summary, payment_context, ...sug.suggestion };
+  console.log("Asking at the going rate.");
+  return { task_summary, payment_context, at_going_rate: true };
 }
 
 async function pushRemote(record) {
@@ -103,10 +101,13 @@ async function main() {
     const body = await askBody();
     const check = await call("/api/check", body, { "x-demo-session": "local-cli-check" });
     printCard(check);
+    const caps = check.ask ?? body; // at the going rate, the caps come from the same classification as the card
+    if (!caps?.total_usd) throw new Error(`No going rate for this task (${check.error ?? check.classification?.error ?? "too few approvals"}). Pass --per-tx/--total/--ttl.`);
+    Object.assign(body, caps);
     // The going rate travels in --task-summary, so it is on Kite's own approval screen.
     const taskSummary = check.card?.kite_task_summary ?? body.task_summary;
     console.log(`Task summary sent to Kite: ${taskSummary}`);
-    const { requestId, approvalUrl } = await kp.createSession({ taskSummary, perTx: body.per_tx_usd, total: body.total_usd, ttlHours: body.ttl_hours });
+    const { requestId, approvalUrl } = await kp.createSession({ taskSummary, perTx: caps.per_tx_usd, total: caps.total_usd, ttlHours: caps.ttl_hours });
     console.log(`Approve with your passkey: ${approvalUrl}\nWaiting for your decision...`);
     const decision = await kp.waitForDecision(requestId);
     console.log(`Kite says: ${decision.outcome}`);
@@ -114,6 +115,37 @@ async function main() {
       await call("/api/outcome", { check_id: check.check_id, outcome: decision.outcome, kite_request_id: requestId }, { authorization: "Bearer local-cli" });
       await pushRemote({ ...body, outcome: decision.outcome, kite_request_id: requestId }).catch((e) => console.warn(`hosted pool not updated: ${e.message}`));
       console.log("Recorded. The rate card now includes this decision.");
+    }
+    return;
+  }
+
+  // Several jobs at once: one going-rate session per job (all approval links up front),
+  // then wait for each passkey decision, record it, and make the job's paid call.
+  if (cmd === "run") {
+    const jobs = JSON.parse(readFileSync(opt("jobs"), "utf8"));
+    const asks = [];
+    for (const job of jobs) {
+      const payment_context = new URL(job.url).host;
+      // One classification drives both the suggested caps and the card.
+      const check = await call("/api/check", { task_summary: job.summary, payment_context, at_going_rate: true }, { "x-demo-session": "local-cli-check" });
+      if (!check.card) { console.log(`skip "${job.summary}": ${check.error ?? check.classification?.error ?? "no going rate"}`); continue; }
+      const caps = check.ask;
+      const s = await kp.createSession({ taskSummary: check.card.kite_task_summary, perTx: caps.per_tx_usd, total: caps.total_usd, ttlHours: caps.ttl_hours });
+      asks.push({ job, check, s });
+      console.log(`\n[${asks.length}] ${check.card.label}: ${job.summary}\n    caps ${money(caps.per_tx_usd)}/payment, ${money(caps.total_usd)} total, ${caps.ttl_hours}h (${check.card.overall})\n    SERV: ${check.card.explanation?.text ?? "-"}\n    APPROVE: ${s.approvalUrl}`);
+    }
+    for (const { job, check, s } of asks) {
+      const d = await kp.waitForDecision(s.requestId);
+      console.log(`\n${job.summary}: ${d.outcome}`);
+      if (d.outcome !== "approved" && d.outcome !== "rejected") continue;
+      await call("/api/outcome", { check_id: check.check_id, outcome: d.outcome, kite_request_id: s.requestId }, { authorization: "Bearer local-cli" });
+      if (d.outcome !== "approved") continue;
+      const listed = await listedPrice(job.url).catch(() => null);
+      const res = await kp.executePaid({ sessionId: d.sessionId, url: job.url, method: job.method ?? "POST", body: job.body, idempotencyKey: `going-rate-run-${s.requestId}` });
+      appendFileSync(PAYMENT_NOTES, JSON.stringify({ at: new Date().toISOString(), task_summary: job.summary, task_type: check.classification.task_type,
+        service: listed?.service ?? new URL(job.url).host, listed_usd: listed?.listed_usd ?? null, request_url: job.url, method: job.method ?? "POST",
+        session_id: d.sessionId, ok: res.ok, code: res.code ?? null }) + "\n");
+      console.log(res.ok ? `  paid: ${short(res.raw, 400)}` : `  refused: ${res.code ?? ""} ${res.message}`);
     }
     return;
   }
@@ -195,11 +227,12 @@ async function main() {
     const result = { task_summary, url, quoted_price_usd: price, phases: [] };
 
     for (const phase of ["docs_default", "going_rate"]) {
-      const caps = phase === "docs_default"
-        ? { per_tx_usd: 1, total_usd: 5, ttl_hours: 1 }
-        : (await call("/api/suggest", { task_summary, payment_context: new URL(url).host })).suggestion;
-      if (!caps) throw new Error("No going rate for this task type.");
-      const check = await call("/api/check", { task_summary, payment_context: new URL(url).host, ...caps }, { "x-demo-session": "local-cli-check" });
+      const payment_context = new URL(url).host;
+      const check = phase === "docs_default"
+        ? await call("/api/check", { task_summary, payment_context, per_tx_usd: 1, total_usd: 5, ttl_hours: 1 }, { "x-demo-session": "local-cli-check" })
+        : await call("/api/check", { task_summary, payment_context, at_going_rate: true }, { "x-demo-session": "local-cli-check" });
+      const caps = check.ask;
+      if (!caps || !check.card) throw new Error(`No going rate for this task (${check.error ?? check.classification?.error ?? "unknown"}).`);
       console.log(`\n=== ${phase === "docs_default" ? "Docs-example caps ($1 / $5)" : "Going Rate's suggested caps"} ===`);
       printCard(check);
       const taskSummary = phase === "going_rate" ? check.card?.kite_task_summary ?? task_summary : task_summary;
