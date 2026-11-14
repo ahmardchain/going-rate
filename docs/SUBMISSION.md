@@ -3,7 +3,7 @@
 **Track:** Kite
 **Repo:** https://github.com/ahmardchain/going-rate
 **Live demo:** https://going-rate.ahmardchain.workers.dev/ · [Contrast](https://going-rate.ahmardchain.workers.dev/contrast) · [Ledger](https://going-rate.ahmardchain.workers.dev/ledger)
-**Demo video:** https://github.com/ahmardchain/going-rate/blob/main/docs/going-rate-demo.mp4 (70s; replace with your YouTube/X link if you upload it)
+**Demo video:** https://x.com/Ahmardchain/status/2121415151375282467/video/1 (also in the repo: docs/going-rate-demo.mp4)
 **X post:** https://x.com/Ahmardchain/status/2121415151375282467
 
 ## What it does
