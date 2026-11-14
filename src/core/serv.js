@@ -151,7 +151,15 @@ export function templateSentence(f) {
  * One sentence explaining the card. Returns { text, source: "serv" | "template", requestId?, ms }.
  * Falls back to the template if SERV is unreachable, refuses, or uses a number it wasn't given.
  */
-export async function explain(facts, taskSummary, { apiKey, fetchImpl = fetch } = {}) {
+export async function explain(facts, taskSummary, opts = {}) {
+  // SERV occasionally returns no sentence (e.g. a guard false positive); retry once before the template.
+  const first = await explainOnce(facts, taskSummary, opts);
+  if (first.source === "serv" || first.why === "no suggestion" || /unreachable/.test(first.why ?? "")) return first;
+  const second = await explainOnce(facts, taskSummary, opts);
+  return { ...second, attempts: 2 };
+}
+
+async function explainOnce(facts, taskSummary, { apiKey, fetchImpl = fetch } = {}) {
   const t0 = Date.now();
   const fallback = (why) => ({ text: templateSentence(facts), source: "template", why, ms: Date.now() - t0 });
   if (!facts.suggested && facts.cue !== "in_line") return fallback("no suggestion");
