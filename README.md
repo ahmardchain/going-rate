@@ -8,7 +8,7 @@ It's the going rate of the task, not an agent exam grade (Imprimatur), not one c
 
 Built for **SERV Hackathon 02, Kite track**.
 
-**[Live demo](https://going-rate.ahmardchain.workers.dev/)** · **[Contrast demo](https://going-rate.ahmardchain.workers.dev/contrast)** · **[Ledger of real Kite payments](https://going-rate.ahmardchain.workers.dev/ledger)** · **[Demo video (70s)](docs/going-rate-demo.mp4)**
+**[Live demo](https://going-rate.ahmardchain.workers.dev/)** · **[Contrast demo](https://going-rate.ahmardchain.workers.dev/contrast)** · **[Ledger of real Kite payments](https://going-rate.ahmardchain.workers.dev/ledger)** · **[Demo video (70s)](docs/going-rate-demo.mp4)** · [X post](https://x.com/Ahmardchain/status/2121415151375282467)
 
 <p align="center"><img src="docs/img/approval-card.png" alt="Going Rate approval card: an agent asks for $100 to generate thumbnails; the going rate is $5.89, so the card shows HIGH, 17x, with a suggested ask of $6.59" width="420"></p>
 

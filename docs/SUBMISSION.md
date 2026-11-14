@@ -4,7 +4,7 @@
 **Repo:** https://github.com/ahmardchain/going-rate
 **Live demo:** https://going-rate.ahmardchain.workers.dev/ · [Contrast](https://going-rate.ahmardchain.workers.dev/contrast) · [Ledger](https://going-rate.ahmardchain.workers.dev/ledger)
 **Demo video:** https://github.com/ahmardchain/going-rate/blob/main/docs/going-rate-demo.mp4 (70s; replace with your YouTube/X link if you upload it)
-**X post:** _add link_
+**X post:** https://x.com/Ahmardchain/status/2121415151375282467
 
 ## What it does
 
