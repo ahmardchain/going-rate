@@ -1,7 +1,92 @@
 {
- "generated_at": "2026-11-13T23:59:45.259Z",
+ "generated_at": "2026-11-14T00:25:17.784Z",
  "source": "kpass activity --kind x402_payment",
  "rows": [
+  {
+   "at": "2026-11-14T00:14:16.824797Z",
+   "status": "completed",
+   "task_type": "web-scraping",
+   "task_summary": "Scrape the example.com landing page for a competitor check",
+   "service": "Exa (x402)",
+   "merchant_host": "api.exa.ai",
+   "request_url": "https://api.exa.ai/contents",
+   "listed_usd": 0.001,
+   "charged_usd": 0.001,
+   "routing_overhead_usd": 0,
+   "chain": "base",
+   "tx_hash": "0x5fe6930e4da52a53d63ba6180eafb027be475feca2347a253430e04e76bfb823",
+   "tx_url": "https://basescan.org/tx/0x5fe6930e4da52a53d63ba6180eafb027be475feca2347a253430e04e76bfb823",
+   "session_id": "agent_session_01a1d765-7db7-723d-ac2d-92de6dc7bdb0",
+   "activity_id": "act-routing-pa-aafad565e81b2f641587646baef10fdede41b5c05f385b01da56cb3cc477dc7f"
+  },
+  {
+   "at": "2026-11-14T00:14:10.569089Z",
+   "status": "completed",
+   "task_type": "image-generation",
+   "task_summary": "Generate a product image of a steel water bottle on a white table",
+   "service": "StableStudio",
+   "merchant_host": "stablestudio.dev",
+   "request_url": "https://stablestudio.dev/api/generate/nano-banana/generate",
+   "listed_usd": 0.039,
+   "charged_usd": 0.07,
+   "routing_overhead_usd": 0,
+   "chain": "base",
+   "tx_hash": "0x11eed619dde8a116cecb533a2468b1b0dcc05441609e1351be4a6b5f3648cd00",
+   "tx_url": "https://basescan.org/tx/0x11eed619dde8a116cecb533a2468b1b0dcc05441609e1351be4a6b5f3648cd00",
+   "session_id": "agent_session_01a1d765-5ce4-727c-be55-e9e402cb5308",
+   "activity_id": "act-routing-pa-42c8313a8481c0ccc536b8e43d4763fde0b198c85c71a9c27eacf1d3d9a28825"
+  },
+  {
+   "at": "2026-11-14T00:11:41.723553Z",
+   "status": "completed",
+   "task_type": "llm-inference",
+   "task_summary": "Write a one-line product tagline for a steel water bottle with an LLM",
+   "service": "GEDX402 Chat",
+   "merchant_host": "chat.gedx402.com",
+   "request_url": "https://chat.gedx402.com/v1/chat/completions",
+   "listed_usd": 0.005,
+   "charged_usd": 0.002,
+   "routing_overhead_usd": 0,
+   "chain": "base",
+   "tx_hash": "0x1148e23d5bd6c3e2b7122cab9bef7ae235444278635673e7d2f2694db310a21e",
+   "tx_url": "https://basescan.org/tx/0x1148e23d5bd6c3e2b7122cab9bef7ae235444278635673e7d2f2694db310a21e",
+   "session_id": "agent_session_01a1d765-3047-747c-b379-81ed1645bf0a",
+   "activity_id": "act-routing-pa-60f39edbda97ab8597f76f8f49c8e89acc3347c599371e02b87fa48fbc475099"
+  },
+  {
+   "at": "2026-11-14T00:11:28.343956Z",
+   "status": "completed",
+   "task_type": "data-api-lookup",
+   "task_summary": "Search the web for the best insulated water bottles of 2026",
+   "service": "Exa (x402)",
+   "merchant_host": "api.exa.ai",
+   "request_url": "https://api.exa.ai/search",
+   "listed_usd": 0.007,
+   "charged_usd": 0.007,
+   "routing_overhead_usd": 0,
+   "chain": "base",
+   "tx_hash": "0xa4e1fab61a502434c5a277128bd9462d642e0b0ae70cf858dc3270bda5b199de",
+   "tx_url": "https://basescan.org/tx/0xa4e1fab61a502434c5a277128bd9462d642e0b0ae70cf858dc3270bda5b199de",
+   "session_id": "agent_session_01a1d765-0957-7d2b-b9e2-76e558f6ed8d",
+   "activity_id": "act-routing-pa-4c3acb7c88b88590ce2fd49a880393b03415e3c46f6037e0941c675e809c65bf"
+  },
+  {
+   "at": "2026-11-14T00:11:25.100123Z",
+   "status": "pending",
+   "task_type": "data-api-lookup",
+   "task_summary": "Get the current weather in Lisbon for a delivery route plan",
+   "service": "Weather",
+   "merchant_host": "weather.hugen.tokyo",
+   "request_url": "https://weather.hugen.tokyo/weather/current?city=Lisbon",
+   "listed_usd": 0.01,
+   "charged_usd": 0.01,
+   "routing_overhead_usd": 0,
+   "chain": "base",
+   "tx_hash": null,
+   "tx_url": null,
+   "session_id": "agent_session_01a1d764-ccf7-78d3-a4cd-386140e176e0",
+   "activity_id": "act-routing-pa-696632c37096db609b0bf60c7152a81e92699789076e21d8152d5be85401e5cd"
+  },
   {
    "at": "2026-09-30T10:20:04.751266Z",
    "status": "completed",
@@ -12,6 +97,7 @@
    "request_url": "https://kite-services.kiteai.dev/v1/image/edits",
    "listed_usd": null,
    "charged_usd": 0,
+   "routing_overhead_usd": null,
    "chain": "kite",
    "tx_hash": null,
    "tx_url": null,
@@ -20,5 +106,34 @@
    "classified_from": "request_url"
   }
  ],
- "by_type": {}
+ "by_type": {
+  "web-scraping": {
+   "calls": 1,
+   "charged_min": 0.001,
+   "charged_median": 0.001,
+   "charged_max": 0.001,
+   "last_paid_at": "2026-11-14T00:14:16.824797Z"
+  },
+  "image-generation": {
+   "calls": 1,
+   "charged_min": 0.07,
+   "charged_median": 0.07,
+   "charged_max": 0.07,
+   "last_paid_at": "2026-11-14T00:14:10.569089Z"
+  },
+  "llm-inference": {
+   "calls": 1,
+   "charged_min": 0.002,
+   "charged_median": 0.002,
+   "charged_max": 0.002,
+   "last_paid_at": "2026-11-14T00:11:41.723553Z"
+  },
+  "data-api-lookup": {
+   "calls": 1,
+   "charged_min": 0.007,
+   "charged_median": 0.007,
+   "charged_max": 0.007,
+   "last_paid_at": "2026-11-14T00:11:28.343956Z"
+  }
+ }
 }

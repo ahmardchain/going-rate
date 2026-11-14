@@ -53,11 +53,16 @@ test("kite task summary carries the going rate and stays within the limit", () =
   assert.match(long, /IN LINE$/);
 });
 
-// Shape of a real kpass 6.13.2 x402_payment event (ids replaced); paid ones add a tx hash.
+// Shape of a real paid kpass 6.13.2 x402_payment event (ids and hashes replaced).
 const event = (over = {}) => ({
   kind: "x402_payment", status: "completed", chain: "base", occurred_at: "2026-11-14T10:00:00Z", id: "activity_1",
-  details: { transaction: { amount_raw: "1330000", chain_id: 8453, session_id: "s1", tx_hash: "0xabc",
-    x402: { merchant_host: "api.x402video.com", request_url: "https://api.x402video.com/generate/seedance/custom", session_id: "s1" } } },
+  details: {
+    routing: { legs: [{ dst_chain: "base", dst_tx_hash: "0xabc", kind: "direct" }], merchant_amount_raw: "1330000", merchant_chain: "base",
+      merchant_tx_hash: "0xabc", merchant_url: "https://api.x402video.com/generate/seedance/custom", routing_overhead_usd_micros: 0, user_debit_usd_micros: 1330000 },
+    session: { session_id: "s1", session_type: "dedicated" },
+    transaction: { amount_raw: "1330000", asset_symbol: "USDC", chain_name: "base", decimals: 6, direction: "debit", session_id: "s1",
+      x402: { merchant_host: "api.x402video.com", request_url: "https://api.x402video.com/generate/seedance/custom", session_id: "s1" } },
+  },
   ...over,
 });
 

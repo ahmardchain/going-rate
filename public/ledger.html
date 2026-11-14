@@ -56,7 +56,7 @@ Promise.all([
   fetch("/api/verified").then((r) => r.json()).catch(() => ({ records: [] })),
 ]).then(([ledger, verified]) => {
   const rows = ledger.rows ?? [];
-  const paid = rows.filter((r) => r.charged_usd > 0);
+  const paid = rows.filter((r) => r.charged_usd > 0 && r.status === "completed");
   const total = paid.reduce((s, r) => s + r.charged_usd, 0);
   const types = new Set(paid.map((r) => r.task_type).filter(Boolean));
   $("#stats").innerHTML = `
@@ -69,8 +69,10 @@ Promise.all([
     (rows.length ? rows.map((r) => `<tr>
       <td>${when(r.at)}</td><td>${esc(label(r.task_type))}</td>
       <td>${esc(r.service)}<div class="fine" style="margin:0">${esc(r.task_summary ?? r.request_url)}</div></td>
-      <td class="num">${money(r.listed_usd)}</td><td class="num"><b>${money(r.charged_usd)}</b></td><td>${diff(r.listed_usd, r.charged_usd)}</td>
-      <td>${r.tx_url ? `<a href="${esc(r.tx_url)}" target="_blank" rel="noopener">${esc(r.tx_hash.slice(0, 10))}…</a>` : r.tx_hash ? esc(r.tx_hash.slice(0, 12)) + "…" : `<span class="fine">${r.charged_usd === 0 ? "free call, no transfer" : "pending"}</span>`}</td>
+      <td class="num">${money(r.listed_usd)}</td>
+      <td class="num">${r.status === "completed" ? `<b>${money(r.charged_usd)}</b>` : `${money(r.charged_usd)}<div><span class="tag">${esc(r.status)}</span></div>`}</td>
+      <td>${r.status === "completed" ? diff(r.listed_usd, r.charged_usd) : "–"}</td>
+      <td>${r.tx_url ? `<a href="${esc(r.tx_url)}" target="_blank" rel="noopener">${esc(r.tx_hash.slice(0, 10))}…</a>` : r.tx_hash ? esc(r.tx_hash.slice(0, 12)) + "…" : `<span class="fine">${r.charged_usd === 0 ? "free call, no transfer" : "not settled yet"}</span>`}</td>
     </tr>`).join("") : `<tr><td colspan="7">No payments yet.</td></tr>`);
 
   const bt = Object.entries(ledger.by_type ?? {});

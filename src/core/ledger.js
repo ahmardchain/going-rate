@@ -41,15 +41,20 @@ export function ledgerRows(events, notes = []) {
   const rows = [];
   for (const e of events) {
     if (e?.kind !== "x402_payment") continue;
+    // kpass 6.13.2: details.transaction (amount, chain_name, x402.request_url) and, for paid
+    // calls, details.routing (user_debit_usd_micros, merchant_tx_hash, merchant_chain, merchant_url).
     const t = e.details?.transaction ?? e.details ?? {};
     const x = t.x402 ?? {};
-    const requestUrl = first(x.request_url, t.request_url);
-    const sessionId = first(x.session_id, t.session_id);
+    const rt = e.details?.routing ?? {};
+    const requestUrl = first(x.request_url, t.request_url, rt.merchant_url);
+    const sessionId = first(x.session_id, t.session_id, e.details?.session?.session_id);
     const at = first(e.occurred_at, e.created_at);
     const candidates = notes.filter((n) => n.request_url === requestUrl && (!sessionId || !n.session_id || n.session_id === sessionId));
     const note = candidates.sort((a, b) => Math.abs(Date.parse(a.at) - Date.parse(at)) - Math.abs(Date.parse(b.at) - Date.parse(at)))[0];
-    const txHash = first(t.tx_hash, t.transaction_hash, t.hash, x.tx_hash, x.transaction, e.details?.tx_hash);
-    const chain = first(t.chain, e.chain);
+    const txHash = first(rt.merchant_tx_hash, rt.legs?.at(-1)?.dst_tx_hash, t.tx_hash, t.transaction_hash, x.tx_hash, e.details?.tx_hash);
+    const chain = first(rt.merchant_chain, t.chain_name, t.chain, e.chain);
+    // What the user was debited (merchant price plus any routing overhead), else the transfer amount.
+    const charged = rt.user_debit_usd_micros != null ? Number(rt.user_debit_usd_micros) / 1e6 : chargedUsd(t);
     rows.push({
       at,
       status: e.status,
@@ -59,7 +64,8 @@ export function ledgerRows(events, notes = []) {
       merchant_host: first(x.merchant_host, t.merchant_host),
       request_url: requestUrl,
       listed_usd: note?.listed_usd ?? null,
-      charged_usd: chargedUsd(t),
+      charged_usd: charged,
+      routing_overhead_usd: rt.routing_overhead_usd_micros != null ? Number(rt.routing_overhead_usd_micros) / 1e6 : null,
       chain,
       tx_hash: txHash ?? null,
       tx_url: explorerUrl(chain, t.chain_id, txHash),
@@ -75,7 +81,8 @@ export function paidSummary(rows) {
   const byType = {};
   for (const r of rows) {
     // Free calls (charged $0) say nothing about the price of a task type.
-    if (!r.task_type || !(r.charged_usd > 0) || r.status === "failed") continue;
+    // Only settled payments count; pending or failed ones haven't been charged for sure.
+    if (!r.task_type || !(r.charged_usd > 0) || r.status !== "completed") continue;
     (byType[r.task_type] ??= []).push(r);
   }
   return Object.fromEntries(Object.entries(byType).map(([type, rs]) => {

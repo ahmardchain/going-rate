@@ -1,6 +1,6 @@
 {
  "note": "Real session decisions confirmed through Kite Passport (kpass session status / kpass user sessions). Not seeded.",
- "updated_at": "2026-11-13T23:59:45.268Z",
+ "updated_at": "2026-11-14T00:25:17.786Z",
  "records": [
   {
    "id": "0bc9bed3-300a-463a-8eac-f5f875b893c9",
@@ -47,6 +47,76 @@
    "kite_verified": true,
    "kite_request_id": "agent_session_req_01a1d043-f879-716f-a4c8-c0c6752522cc",
    "at": "2026-11-12T14:59:02.179Z"
+  },
+  {
+   "id": "fd450cb8-1cb2-49ad-a8a4-b3ac7d7bf6d8",
+   "task_type": "data-api-lookup",
+   "task_summary": "Get the current weather in Lisbon for a delivery route plan",
+   "per_tx_usd": 0.06,
+   "total_usd": 2.53,
+   "ttl_hours": 3,
+   "outcome": "approved",
+   "source": "kpass-session",
+   "seeded": false,
+   "kite_verified": true,
+   "kite_request_id": "agent_session_req_01a1d760-427b-79b2-bd11-33345214cae8",
+   "at": "2026-11-14T00:11:10.254Z"
+  },
+  {
+   "id": "d15ba664-72c6-457b-81cd-88bb051846fa",
+   "task_type": "data-api-lookup",
+   "task_summary": "Search the web for the best insulated water bottles of 2026",
+   "per_tx_usd": 0.06,
+   "total_usd": 2.53,
+   "ttl_hours": 3,
+   "outcome": "approved",
+   "source": "kpass-session",
+   "seeded": false,
+   "kite_verified": true,
+   "kite_request_id": "agent_session_req_01a1d760-74cb-7c48-a585-59ebb4ec1d7b",
+   "at": "2026-11-14T00:11:25.649Z"
+  },
+  {
+   "id": "de1c497a-74ca-4cec-b169-64e51cad44bd",
+   "task_type": "llm-inference",
+   "task_summary": "Write a one-line product tagline for a steel water bottle with an LLM",
+   "per_tx_usd": 0.26,
+   "total_usd": 6.5,
+   "ttl_hours": 6,
+   "outcome": "approved",
+   "source": "kpass-session",
+   "seeded": false,
+   "kite_verified": true,
+   "kite_request_id": "agent_session_req_01a1d760-ae15-72e5-89af-485b158d1268",
+   "at": "2026-11-14T00:11:37.908Z"
+  },
+  {
+   "id": "84a1b393-a066-43fd-bb2b-cc769d6001ff",
+   "task_type": "image-generation",
+   "task_summary": "Generate a product image of a steel water bottle on a white table",
+   "per_tx_usd": 0.56,
+   "total_usd": 6.56,
+   "ttl_hours": 2,
+   "outcome": "approved",
+   "source": "kpass-session",
+   "seeded": false,
+   "kite_verified": true,
+   "kite_request_id": "agent_session_req_01a1d760-d964-7ba0-a04f-69c236b29360",
+   "at": "2026-11-14T00:11:48.264Z"
+  },
+  {
+   "id": "e66adaa9-778c-4d91-80e9-bd4a00782d5f",
+   "task_type": "other",
+   "task_summary": "Scrape the example.com landing page for a competitor check",
+   "per_tx_usd": 0.12,
+   "total_usd": 7.14,
+   "ttl_hours": 10,
+   "outcome": "approved",
+   "source": "kpass-session",
+   "seeded": false,
+   "kite_verified": true,
+   "kite_request_id": "agent_session_req_01a1d761-201a-7679-a33d-47a590c85f5c",
+   "at": "2026-11-14T00:11:55.769Z"
   }
  ]
 }

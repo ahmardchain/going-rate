@@ -163,7 +163,8 @@ async function main() {
       classify({ taskSummary: task_summary, paymentContext: new URL(url).host }, { apiKey: env.SERV_API_KEY }),
     ]);
     console.log(`${cls.task_type ?? "unclassified"} · ${listed?.service ?? new URL(url).host} · listed ${listed?.listed_usd != null ? money(listed.listed_usd) : "?"}`);
-    const res = await kp.executePaid({ sessionId, url, method, body, idempotencyKey: `going-rate-${crypto.randomUUID()}` });
+    // Reuse --idempotency-key when Kite says payment_outcome_pending: a new key could pay twice.
+    const res = await kp.executePaid({ sessionId, url, method, body, idempotencyKey: opt("idempotency-key") ?? `going-rate-${crypto.randomUUID()}` });
     const note = { at: new Date().toISOString(), task_summary, task_type: cls.task_type ?? null, service: listed?.service ?? null, listed_usd: listed?.listed_usd ?? null,
       request_url: url, method, session_id: sessionId, ok: res.ok, code: res.code ?? null };
     appendFileSync(PAYMENT_NOTES, JSON.stringify(note) + "\n");
