@@ -91,10 +91,14 @@ h1{font-size:60px;line-height:1.08;letter-spacing:-.025em;margin:0 0 26px}.s{fon
   }
   await page.evaluate(() => document.querySelector("#sheet").scrollIntoView({ block: "start" }));
   await page.waitForTimeout(600);
+  // Start on the flow diagram (Agent -> SERV Reasoning / OpenServ -> Going Rate -> Kite), then the live card.
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForTimeout(400);
   await play(2, [
-    { at: 0.05, fn: () => focus("#sheet .type") },
-    { at: 0.28, fn: () => focus("#sheet .serv") },
-    { at: 0.58, fn: () => focus("#sheet table") },
+    { at: 0.0, fn: () => focus("#flow") },
+    { at: 0.17, fn: () => focus("#n-serv") },
+    { at: 0.33, fn: () => focus("#sheet .serv") },
+    { at: 0.6, fn: () => focus("#sheet table") },
     { at: 0.86, fn: () => focus("#sheet .cue") },
   ]);
 
