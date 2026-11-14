@@ -87,9 +87,10 @@ test("ledger: free calls and other kinds", () => {
 
 test("paid summary per task type", () => {
   const s = paidSummary([
-    { task_type: "data-api-lookup", charged_usd: 0.01, at: "2026-11-14T10:00:00Z" },
-    { task_type: "data-api-lookup", charged_usd: 0.007, at: "2026-11-14T11:00:00Z" },
-    { task_type: null, charged_usd: 1 },
+    { task_type: "data-api-lookup", charged_usd: 0.01, at: "2026-11-14T10:00:00Z", status: "completed" },
+    { task_type: "data-api-lookup", charged_usd: 0.007, at: "2026-11-14T11:00:00Z", status: "completed" },
+    { task_type: "data-api-lookup", charged_usd: 0.5, at: "2026-11-14T12:00:00Z", status: "pending" }, // not settled: ignored
+    { task_type: null, charged_usd: 1, status: "completed" },
   ]);
   assert.deepEqual(Object.keys(s), ["data-api-lookup"]);
   assert.equal(s["data-api-lookup"].calls, 2);
