@@ -17,7 +17,8 @@
   <div class="vs" id="vs"><div class="panel">Loading…</div></div>
   <p class="fine" id="generated"></p>
 </main>
-<script>
+<script type="module">
+import { borderBeam } from "/ui.js";
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const money = (v) => (v == null ? "–" : `$${Number(v).toFixed(2)}`);
@@ -56,6 +57,9 @@ Promise.all([
     <h2 style="margin-top:4px">${esc(c.task_summary)}</h2>
     <p class="fine">Paid endpoint <code>${esc(c.url)}</code>. The merchant quoted ${money(c.quoted_price_usd)} for this exact call (its unpaid 402 challenge), above the $1 per-payment cap.</p></div>`;
   $("#vs").innerHTML = c.phases.map((p) => column(p, ledger.rows ?? [], c.quoted_price_usd)).join("");
+  // Border Beam on the column that paid on the first approval.
+  const sheets = document.querySelectorAll("#vs .sheet");
+  c.phases.forEach((p, i) => { if (p.paid) borderBeam(sheets[i], { size: 160, duration: 5, colorFrom: "#34d399", colorTo: "#1f6b4f" }); });
   $("#generated").textContent = `Recorded ${when(c.generated_at)} with real Kite Passport sessions and passkey approvals.`;
 });
 </script>

@@ -86,7 +86,8 @@
   </section>
 </main>
 
-<script>
+<script type="module">
+import { borderBeam, shimmer, shimmerAll } from "/ui.js";
 const $ = (s, el = document) => el.querySelector(s);
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const money = (v) => (v == null ? "–" : `$${Number(v).toFixed(2)}`);
@@ -147,6 +148,10 @@ function renderCard(check) {
     </div>
     <p class="fine">Based on ${c.rate.n} approvals: ${p.seeded} seeded, ${p.demo_clicks} from your clicks here, ${p.kite_verified} confirmed through Kite. Passkey simulated in demo mode.</p>
     <div id="toast"></div>`;
+  // Border Beam on the card; colors follow the cue.
+  const beamColors = { high: ["#ff8a80", "#b3261e"], low: ["#f2c46b", "#8a5a00"], in_line: ["#34d399", "#1f6b4f"] }[c.overall] ?? [];
+  borderBeam($("#sheet"), { size: 140, duration: 5, colorFrom: beamColors[0], colorTo: beamColors[1] });
+  shimmer($("#sheet [data-decide=approved]"));
   $("#sheet").querySelectorAll("[data-decide]").forEach((b) => b.onclick = async () => {
     $("#sheet").querySelectorAll("[data-decide]").forEach((x) => x.disabled = true);
     try {
@@ -202,6 +207,7 @@ api("/api/config").then((c) => {
   $("#nverified").textContent = String(c.verified_records ?? 0);
 }).catch(() => {});
 loadRates().catch((e) => { $("#rates").innerHTML = `<tr><td class="err">${esc(e.message)}</td></tr>`; });
+shimmerAll();
 </script>
 </body>
 </html>

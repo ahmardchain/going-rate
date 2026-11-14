@@ -35,7 +35,8 @@
 
   <p class="fine" id="generated"></p>
 </main>
-<script>
+<script type="module">
+import { tickAll } from "/ui.js";
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const money = (v) => (v == null ? "–" : `$${Number(v) > 0 && Number(v) < 0.01 ? Number(v).toFixed(5).replace(/0+$/, "") : Number(v).toFixed(2)}`);
@@ -60,10 +61,11 @@ Promise.all([
   const total = paid.reduce((s, r) => s + r.charged_usd, 0);
   const types = new Set(paid.map((r) => r.task_type).filter(Boolean));
   $("#stats").innerHTML = `
-    <div><b>${paid.length}</b><span>real paid calls</span></div>
-    <div><b>${types.size}</b><span>task types with real prices</span></div>
-    <div><b>${money(total)}</b><span>charged in total</span></div>
-    <div><b>${(verified.records ?? []).length}</b><span>Kite-verified session decisions</span></div>`;
+    <div><b data-ticker="${paid.length}">${paid.length}</b><span>real paid calls</span></div>
+    <div><b data-ticker="${types.size}">${types.size}</b><span>task types with real prices</span></div>
+    <div><b data-ticker="${total.toFixed(2)}" data-decimals="2" data-prefix="$">${money(total)}</b><span>charged in total</span></div>
+    <div><b data-ticker="${(verified.records ?? []).length}">${(verified.records ?? []).length}</b><span>Kite-verified session decisions</span></div>`;
+  tickAll($("#stats"));
 
   $("#payments").innerHTML = `<tr><th>Time</th><th>Task type</th><th>Service</th><th class="num">Listed</th><th class="num">Charged</th><th>Charged vs listed</th><th>Transaction</th></tr>` +
     (rows.length ? rows.map((r) => `<tr>

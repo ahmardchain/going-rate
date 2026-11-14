@@ -18,7 +18,7 @@ http.createServer(async (req, res) => {
     const path = req.url.split("?")[0].replace(/\.\./g, "");
     const file = path === "/" ? "index.html" : /\.[a-z]+$/.test(path) ? path.slice(1) : `${path.slice(1)}.html`;
     try {
-      const TYPES = { html: "text/html; charset=utf-8", css: "text/css; charset=utf-8", json: "application/json", svg: "image/svg+xml", png: "image/png" };
+      const TYPES = { html: "text/html; charset=utf-8", css: "text/css; charset=utf-8", json: "application/json", js: "text/javascript; charset=utf-8", svg: "image/svg+xml", png: "image/png" };
       const type = TYPES[file.split(".").pop()] ?? "text/plain";
       const content = await readFile(root(`../public/${file}`)); // read first, so a missing file can still 404
       res.writeHead(200, { "Content-Type": type });

@@ -87,7 +87,7 @@ a { color: var(--accent); }
 /* Ledger and contrast */
 .wide { overflow-x: auto; }
 .wide table { min-width: 720px; }
-.num { text-align: right; }
+td.num, th.num { text-align: right; }
 .tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 99px; background: var(--soft); color: var(--accent); }
 .tag.bad { background: var(--high-bg); color: var(--high); }
 .tag.good { background: var(--ok-bg); color: var(--ok); }
@@ -104,3 +104,53 @@ a { color: var(--accent); }
 .result.bad { background: var(--high-bg); color: var(--high); }
 .result.good { background: var(--ok-bg); color: var(--ok); }
 code { word-break: break-word; }
+
+/* ---------------------------------------------------------------------------
+   Ported from Magic UI (https://magicui.design, on 21st.dev), MIT License,
+   Copyright (c) Magic UI: Border Beam and Shimmer Button. See public/ui.js.
+--------------------------------------------------------------------------- */
+:root { --color-from: #34d399; --color-to: #2453ff; }
+.beam-host { position: relative; }
+.beam {
+  pointer-events: none; position: absolute; inset: 0; border-radius: inherit;
+  border: var(--beam-width, 2px) solid transparent;
+  -webkit-mask: linear-gradient(transparent, transparent), linear-gradient(#000, #000);
+  -webkit-mask-clip: padding-box, border-box; -webkit-mask-composite: source-in;
+  mask: linear-gradient(transparent, transparent), linear-gradient(#000, #000);
+  mask-clip: padding-box, border-box; mask-composite: intersect;
+}
+.beam i {
+  position: absolute; aspect-ratio: 1;
+  background: linear-gradient(to left, var(--color-from), var(--color-to), transparent);
+  offset-distance: 0%; animation: beam 6s linear infinite;
+}
+@keyframes beam { to { offset-distance: 100%; } }
+@media (prefers-reduced-motion: reduce) { .beam i { animation: none; } }
+
+/* Shimmer Button */
+.shimmer {
+  --spread: 90deg; --shimmer-color: #ffffff; --speed: 3s; --cut: 0.05em; --bg: var(--accent); --radius: 12px;
+  position: relative; z-index: 0; overflow: hidden; isolation: isolate; border-radius: var(--radius);
+  color: var(--accent-ink); background: var(--bg); border: 1px solid rgba(255,255,255,.12);
+  transition: transform .3s ease-in-out;
+}
+.shimmer:active { transform: translateY(1px); }
+.shimmer .spark-wrap { position: absolute; inset: 0; z-index: -30; filter: blur(2px); container-type: size; overflow: visible; }
+.shimmer .spark { position: absolute; inset: 0; height: 100cqh; aspect-ratio: 1; animation: shimmer-slide var(--speed) ease-in-out infinite alternate; }
+.shimmer .spark::before {
+  content: ""; position: absolute; inset: -100%; width: auto;
+  background: conic-gradient(from calc(270deg - (var(--spread) * 0.5)), transparent 0, var(--shimmer-color) var(--spread), transparent var(--spread));
+  animation: spin-around calc(var(--speed) * 2) infinite linear;
+}
+.shimmer .backdrop { position: absolute; inset: var(--cut); z-index: -20; border-radius: var(--radius); background: var(--bg); }
+.shimmer .highlight { position: absolute; inset: 0; border-radius: var(--radius); box-shadow: inset 0 -8px 10px #ffffff1f; transition: box-shadow .3s ease-in-out; pointer-events: none; }
+.shimmer:hover .highlight { box-shadow: inset 0 -6px 10px #ffffff3f; }
+.shimmer:active .highlight { box-shadow: inset 0 -10px 10px #ffffff3f; }
+@keyframes shimmer-slide { to { transform: translate(calc(100cqw - 100%), 0); } }
+@keyframes spin-around {
+  0% { transform: translateZ(0) rotate(0); }
+  15%, 35% { transform: translateZ(0) rotate(90deg); }
+  65%, 85% { transform: translateZ(0) rotate(270deg); }
+  100% { transform: translateZ(0) rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) { .shimmer .spark, .shimmer .spark::before { animation: none; } }

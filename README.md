@@ -226,6 +226,10 @@ test/                 26 tests
 docs/                 submission write-up, video script, screenshot
 ```
 
+## Credits
+
+The Border Beam, Number Ticker and Shimmer Button effects are vanilla JS/CSS ports of [Magic UI](https://magicui.design) components (also published on [21st.dev](https://21st.dev)), MIT License, Copyright (c) Magic UI. See [`public/ui.js`](public/ui.js) and the end of [`public/style.css`](public/style.css).
+
 ## License
 
 MIT
